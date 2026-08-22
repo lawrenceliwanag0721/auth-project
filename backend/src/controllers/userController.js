@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
 
-const loginUser = async (req, res) => {
-  
+const signInUser = async (req, res) => {
+
 	try {
 		const user = await User.findOne({
       username: req.body.username
@@ -120,7 +120,7 @@ const deleteUser = async (req, res) => {
 };
 
 module.exports = {
-  loginUser,
+  signInUser,
   getUsers,
   getUserById,
   createUser,

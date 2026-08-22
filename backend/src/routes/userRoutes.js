@@ -1,7 +1,7 @@
 const express = require('express');
 
 const {
-  loginUser,
+  signInUser,
   getUsers,
   getUserById,
   createUser,
@@ -23,7 +23,7 @@ const router = express.Router();
 router.get('/', getUsers);
 router.get('/:id', getUserById);
 router.post('/signup', validateSignUpMiddleware, createUser);
-router.post('/signin', validateSignInMiddleware, loginUser);
+router.post('/signin', validateSignInMiddleware, signInUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
