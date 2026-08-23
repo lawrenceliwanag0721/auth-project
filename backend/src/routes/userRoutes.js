@@ -19,6 +19,9 @@ const {
 } = require('../validators/userValidator');
 
 const router = express.Router();
+router.get('/test', (req, res) => {
+  res.json({msg: "hello from router!"})
+});
 
 router.get('/', getUsers);
 router.get('/:id', getUserById);

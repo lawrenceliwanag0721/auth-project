@@ -1,3 +1,4 @@
+require('dotenv').config();
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -13,17 +14,19 @@ const signInUser = async (req, res) => {
 
 		if (!user) {
 			return res.status(401).json({
-        msg: "invalid credential" 
+        message: "User not found..." 
       });
 		}
+    console.log(req.body);
+    console.log(user);
 
-		const isValid = await bcrypt.compare(
+		const correctPassword = await bcrypt.compare(
       req.body.password, user.password
     );
 
-		if (!isValid) {
+		if (!correctPassword) {
 			return res.status(401).json({ 
-        msg: "invalid credential" 
+        message: "Password incorrect..." 
       });
 		}
 
@@ -41,11 +44,12 @@ const signInUser = async (req, res) => {
 		});
 
 		return res.json({ 
-      msg: "Login successful" 
+      message: "Login successful" 
     });
-	} catch (error) {
+	}catch (error) {
+    console.log(error);
 		return res.status(500).json({ 
-      msg: "server error" 
+      message: "server error" 
     });
 	}
 };
@@ -69,14 +73,27 @@ const getUserById = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { username, email, password, role, avatar } = req.body;
+  const { username, email, password} = req.body;
+
+  const existingUser = await User.findOne({
+      $or: [
+          { username: username },
+          { email: email }
+      ]
+  });
+
+  if (existingUser) {
+    return res.status(401).json({
+      message: "Account already exists..." 
+    });
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
+
   const user = await User.create({
     username,
     email,
     password: hashedPassword,
-    role,
-    avatar,
   });
 
   const response = user.toObject();

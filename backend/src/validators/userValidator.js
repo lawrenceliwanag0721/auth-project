@@ -93,12 +93,10 @@ function validateUser(data = {}) {
   const username = validateUsername(data.username);
   const email = validateEmail(data.email);
   const password = validatePassword(data.password);
-  const role = validateRole(data.role);
 
   if (username.length) errors.username = username;
   if (email.length) errors.email = email;
   if (password.length) errors.password = password;
-  if (role.length) errors.role = role;
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
@@ -109,7 +107,7 @@ function validateUser(data = {}) {
  * @returns {{ valid: boolean, errors: object }}
  */
 function validateUserUpdate(data = {}) {
-  const errors = {};
+  const errors = [];
 
   if (data.username !== undefined) {
     const e = validateUsername(data.username);
@@ -132,13 +130,41 @@ function validateUserUpdate(data = {}) {
     if (e.length) errors.avatar = e;
   }
 
-  return { valid: Object.keys(errors).length === 0, errors };
+  return { valid: errors.length === 0, errors };
 }
 
-/**
- * Express middleware wrapper — plug straight into a route.
- * Usage: router.post('/signup', validateUserMiddleware, controller.signup)
- */
+function validateSignIn(data = {}){
+
+  const errors = [];
+
+    const usernameErrors = validateUsername(data.username);
+    errors.push(...usernameErrors);
+    const passwordErrors = validatePassword(data.password);
+    errors.push(...passwordErrors);
+
+  return { valid: errors.length === 0, errors };
+}
+
+function validateSignUp(data = {}){
+
+  const errors =[];
+
+  if(data.password !== data.confirmPassword){
+    errors.push("Password mismatched");
+  }
+  
+    const usernameErrors = validateUsername(data.username);
+    errors.push(...usernameErrors);
+
+    const emailErrors = validateEmail(data.email);
+    errors.push(...emailErrors);
+
+    const passwordErrors = validatePassword(data.password);
+    errors.push(...passwordErrors);
+    
+  return { valid: errors.length === 0, errors };
+}
+
 function validateUserMiddleware(req, res, next) {
   const { valid, errors } = validateUser(req.body);
   if (!valid) return res.status(400).json({ errors });
@@ -152,40 +178,14 @@ function validateUserUpdateMiddleware(req, res, next) {
 }
 
 function validateSignInMiddleware(req, res, next){
-
-  const username = validateUsername(req.body.username);
-  const password = validatePassword(req.body.password);
-  const errors = [...username, ...password];
-
-  if(errors.length !==0){
-    return res.status(422).json({
-      message: "request validation failed",
-      errors: errors,
-    })
-  }
+  const {valid, errors} = validateSignIn(req.body); 
+  if (!valid) return res.status(400).json({ valid, errors });
   next();
 }
 
 function validateSignUpMiddleware(req, res, next){
-
-  if(req.body.password !== req.body.confirmPassword){
-    return res.status(422).json({
-      message: "password mismatched"
-    });
-  }
-  
-  const username = validateUsername(req.body.username);
-  const email = validateEmail(req.body.email);
-  const password = validatePassword(req.body.password);
-  const confirmPassword = validatePassword(req.body.confirmPassword);
-  const errors = [...username, ...password, ...confirmPassword, ...email];
-
-  if(errors.length !==0){
-    return res.status(422).json({
-      message: "request validation failed",
-      errors: errors,
-    })
-  }  
+  const {valid, errors} = validateSignUp(req.body); 
+  if (!valid) return res.status(400).json({ errors }); 
   next();
 }
 
