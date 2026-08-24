@@ -55,18 +55,22 @@ const signInUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-  const users = await User.find().select('-password').sort({ createdAt: -1 });
+  const users = await User.find().select(['-password','-email']).sort({ createdAt: -1 });
   res.json(users);
 };
 
 const getUserById = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid user ID' });
+    return res.status(400).json({
+      message: 'Invalid user ID'
+    });
   }
 
-  const user = await User.findById(req.params.id).select('-password');
+  const user = await User.findById(req.params.id).select(['-password','-email']);
   if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+    return res.status(404).json({
+      message: 'User not found'
+    });
   }
 
   res.json(user);

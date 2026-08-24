@@ -4,14 +4,14 @@ const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
-
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 5000;
 const mongoUri = process.env.MONGO_URI;
 
 app.use(cors());
 app.use(express.json());
-
+app.use(cookieParser());
 // app.use(express.urlencoded({ extended: true }));
 // app.use(
 //   rateLimit({

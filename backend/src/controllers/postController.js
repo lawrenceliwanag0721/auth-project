@@ -1,6 +1,48 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
-
+const jwt = require('jsonwebtoken');
 const Post = require('../models/Post');
+
+const createPost = async (req, res) => {
+  try {
+    console.log("Cookies:", req.cookies);
+    console.log("AuthToken:", req.cookies?.AuthToken);
+    const token = req.cookies?.AuthToken;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+    // Verify JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { title, content } = req.body;
+
+    const post = await Post.create({
+      title,
+      content,
+      author: decoded.id,
+    });
+
+    // Get author's name for the response
+    await post.populate("author", "name");
+
+    return res.status(201).json(post);
+  } catch (error) {
+    console.error(error);
+
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Invalid or expired token",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to create post",
+    });
+  }
+};
 
 const getPosts = async (req, res) => {
   const posts = await Post.find()
@@ -23,13 +65,6 @@ const getPostById = async (req, res) => {
   }
 
   res.json(post);
-};
-
-const createPost = async (req, res) => {
-  const { title, content, author, published } = req.body;
-  const post = await Post.create({ title, content, author, published });
-  await post.populate('author', 'username email');
-  res.status(201).json(post);
 };
 
 const updatePost = async (req, res) => {

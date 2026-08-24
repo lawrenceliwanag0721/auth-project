@@ -20,7 +20,7 @@ const {
 
 const router = express.Router();
 router.get('/test', (req, res) => {
-  res.json({msg: "hello from router!"})
+  res.json({msg: "hello from router!!"})
 });
 
 router.get('/', getUsers);
@@ -28,7 +28,6 @@ router.get('/:id', getUserById);
 router.post('/signup', validateSignUpMiddleware, createUser);
 router.post('/signin', validateSignInMiddleware, signInUser);
 router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
-
+//router.delete('/:id', deleteUser);
 
 module.exports = router;
