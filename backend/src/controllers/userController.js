@@ -102,7 +102,7 @@ const createUser = async (req, res) => {
 
   const response = user.toObject();
   delete response.password;
-  res.status(201).json(response);
+  res.status(201).json({message: "Registration complete!"});
 };
 
 const updateUser = async (req, res) => {

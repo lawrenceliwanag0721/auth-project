@@ -146,7 +146,6 @@ function validateSignIn(data = {}){
 }
 
 function validateSignUp(data = {}){
-
   const errors =[];
 
   if(data.password !== data.confirmPassword){

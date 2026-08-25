@@ -5,38 +5,19 @@ const Post = require('../models/Post');
 
 const createPost = async (req, res) => {
   try {
-    console.log("Cookies:", req.cookies);
-    console.log("AuthToken:", req.cookies?.AuthToken);
-    const token = req.cookies?.AuthToken;
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Authentication required",
-      });
-    }
-    // Verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     const { title, content } = req.body;
 
     const post = await Post.create({
       title,
       content,
-      author: decoded.id,
+      author: req.user.id,
     });
 
-    // Get author's name for the response
     await post.populate("author", "name");
 
     return res.status(201).json(post);
   } catch (error) {
     console.error(error);
-
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        message: "Invalid or expired token",
-      });
-    }
 
     return res.status(500).json({
       message: "Failed to create post",
@@ -45,10 +26,18 @@ const createPost = async (req, res) => {
 };
 
 const getPosts = async (req, res) => {
+  const userId = req.user.id;
+
   const posts = await Post.find()
-    .populate('author', 'username email')
+    .populate('author', 'username')
     .sort({ createdAt: -1 });
-  res.json(posts);
+
+  const postsWithPerm = posts.map(post => ({
+    ...post.toObject(),
+    canDelete: userId.toString() === post.author._id.toString()
+  }));
+
+  res.json(postsWithPerm);
 };
 
 const getPostById = async (req, res) => {
@@ -67,6 +56,34 @@ const getPostById = async (req, res) => {
   res.json(post);
 };
 
+const deletePost = async (req, res) => {
+  try {
+    const post = await Post.findOne({ _id: req.params.id });
+
+    if (!post) {
+      return res.status(404).json({
+        message: 'Post not found'
+      });
+    }
+
+    if (post.author.toString() !== req.user.id.toString()) {
+      return res.status(403).json({
+        message: 'Unauthorized deletion...'
+      });
+    }
+
+    await post.deleteOne();
+    res.status(204).send();
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
+
 const updatePost = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
@@ -83,20 +100,6 @@ const updatePost = async (req, res) => {
 
   res.json(post);
 };
-
-const deletePost = async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid post ID' });
-  }
-
-  const post = await Post.findByIdAndDelete(req.params.id);
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-
-  res.status(204).send();
-};
-
 module.exports = {
   getPosts,
   getPostById,

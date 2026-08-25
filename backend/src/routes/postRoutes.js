@@ -1,5 +1,5 @@
 const express = require('express');
-
+const validateAuth = require('../validators/authValidator');
 const {
   getPosts,
   getPostById,
@@ -10,10 +10,12 @@ const {
 
 const router = express.Router();
 
-router.get('/', getPosts);
+router.get('/', validateAuth, getPosts);
 router.get('/:id', getPostById);
-router.post('/', createPost);
+router.post('/', validateAuth, createPost);
 router.patch('/:id', updatePost);
-router.delete('/:id', deletePost);
+router.delete('/:id', validateAuth, deletePost);
 
 module.exports = router;
+
+//fetch(apiroute/${id}) method:delete
