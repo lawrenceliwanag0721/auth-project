@@ -12,7 +12,6 @@ const createPost = async (req, res) => {
       content,
       author: req.user.id,
     });
-
     await post.populate("author", "name");
 
     return res.status(201).json(post);

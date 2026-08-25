@@ -6,10 +6,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const signInUser = async (req, res) => {
-
+  const {username, password} = req.body;
 	try {
 		const user = await User.findOne({
-      username: req.body.username
+      username: username
     });
 
 		if (!user) {
@@ -17,11 +17,9 @@ const signInUser = async (req, res) => {
         message: "User not found..." 
       });
 		}
-    console.log(req.body);
-    console.log(user);
 
 		const correctPassword = await bcrypt.compare(
-      req.body.password, user.password
+      password, user.password
     );
 
 		if (!correctPassword) {

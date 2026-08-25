@@ -82,6 +82,17 @@ function validateAvatar(avatar) {
   return errors;
 }
 
+function hasExtraFields(data = {}, allowedList){
+  const errors = [];
+  const extraFields = Object.keys(data).filter(
+    (key) => !allowedList.has(key)
+  );
+  if(extraFields.length !== 0){
+    errors.push("invalid fields found")
+  }
+  return errors;
+}
+
 /**
  * Validates a full user payload (e.g. signup).
  * @param {object} data
@@ -147,19 +158,28 @@ function validateSignIn(data = {}){
 
 function validateSignUp(data = {}){
   const errors =[];
+  const allowedlist = new Set([
+    "username", 
+    "email", 
+    "password", 
+    "confirmPassword"
+  ]);
 
+  const hasExtras = hasExtraFields(data, allowedlist);
+  errors.push(...hasExtras);
+  
+  const usernameErrors = validateUsername(data.username);
+  errors.push(...usernameErrors);
+
+  const emailErrors = validateEmail(data.email);
+  errors.push(...emailErrors);
+
+  const passwordErrors = validatePassword(data.password);
+  errors.push(...passwordErrors);
+  
   if(data.password !== data.confirmPassword){
     errors.push("Password mismatched");
   }
-  
-    const usernameErrors = validateUsername(data.username);
-    errors.push(...usernameErrors);
-
-    const emailErrors = validateEmail(data.email);
-    errors.push(...emailErrors);
-
-    const passwordErrors = validatePassword(data.password);
-    errors.push(...passwordErrors);
     
   return { valid: errors.length === 0, errors };
 }
