@@ -63,7 +63,6 @@ function validateRole(role) {
   const errors = [];
   const allowed = ['user', 'admin'];
 
-  // role is optional (defaults to 'user'), only validate if provided
   if (role !== undefined && !allowed.includes(role)) {
     errors.push(`Role must be one of: ${allowed.join(', ')}.`);
   }

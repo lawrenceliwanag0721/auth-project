@@ -17,5 +17,3 @@ router.post('/', validateAuth, createPost);
 router.delete('/:id', validateAuth, deletePost);
 
 module.exports = router;
-
-//fetch(apiroute/${id}) method:delete

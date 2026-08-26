@@ -1,5 +1,5 @@
 const express = require('express');
-
+const validateAuth = require('../validators/authValidator');
 const {
   signInUser,
   getUsers,
@@ -25,6 +25,7 @@ router.get('/test', (req, res) => {
 
 router.get('/', getUsers);
 router.get('/:id', getUserById);
+router.post('/', validateAuth, (req, res) => {res.status(200).json({msg: "client has Token"})});
 router.post('/signup', validateSignUpMiddleware, createUser);
 router.post('/signin', validateSignInMiddleware, signInUser);
 router.put('/:id', updateUser);

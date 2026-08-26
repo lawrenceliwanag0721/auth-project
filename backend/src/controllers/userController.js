@@ -40,7 +40,7 @@ const signInUser = async (req, res) => {
 			sameSite: "lax",
 			maxAge: 60 * 60 * 1000
 		});
-
+    console.log(username + ' logged in')
 		return res.json({ 
       message: "Login successful" 
     });
