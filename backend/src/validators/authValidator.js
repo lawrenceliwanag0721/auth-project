@@ -20,7 +20,9 @@ function validateAuth(req, res ,next) {
       });
     }
     console.log(error);
-    return res.status(401).json({msg : "something went wrong..."});
+    return res.status(500).json({
+      msg : "something went wrong..."
+    });
   }
   next();
 }

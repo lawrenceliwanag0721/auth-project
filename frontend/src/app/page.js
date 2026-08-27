@@ -1,25 +1,26 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import LoginForm from '@/components/LoginForm'
 
 export default function Home() {
   const router = useRouter()
-
+  const [isAuth, setAuth] = useState(true);
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/user/", {
-          method: "GET",
+          method: "POST",
           credentials: "include",
         })
 
         if (response.ok) {
-          router.replace("/home")
+          router.replace('/home');
         } else {
-          router.replace("/login")
+          setAuth(false);
         }
       } catch (err) {
-        router.replace("/login")
+          setAuth(false);
       }
     }
 
@@ -27,8 +28,8 @@ export default function Home() {
   }, [router])
 
   return (
-    <main>
-      checking token...
+    <main className="flex flex-col h-screen w-full justify-center items-center">
+      {!isAuth && <LoginForm/>}
     </main>
   )
 }

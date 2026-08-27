@@ -138,6 +138,11 @@ const deleteUser = async (req, res) => {
   res.status(204).send();
 };
 
+const isTokenExists = async (req, res) => {
+  res.status(200).json({ 
+    msg: "client has Token"
+  })}
+
 module.exports = {
   signInUser,
   getUsers,
@@ -145,4 +150,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  isTokenExists,
 };

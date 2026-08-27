@@ -20,11 +20,10 @@ export default function LoginForm() {
     if (!response.ok) {
       throw new Error(result.message || "Login failed");
     }
-        console.log("success!");
-    router.replace("/");
-
+    router.replace("/home");
     return result;
   }
+
   const objectify = (e) =>{
     e.preventDefault();
 
@@ -54,17 +53,19 @@ export default function LoginForm() {
             placeholder="password"
             className="text-center w-full border border-black/30 text-black placeholder:text-black/60 rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-black/50"
           />
-
           <button type="submit" className="w-full bg-mist-900 text-white px-4 py-2 rounded-lg">
             Login
           </button>
         </form>
 
-
-
         <div className="flex flex-row gap-4 w-full">
-          <button className="w-full border border-black/30 px-4 py-2 rounded-lg">Google</button>
-          <button className="w-full border border-black/30 px-4 py-2 rounded-lg flex flex-row gap-2 justify-center items-center"><PencilLine size={16}/>Register</button>
+          <button className="w-full border border-black/30 px-4 py-2 rounded-lg">
+            Google
+          </button>
+          <button className="w-full border border-black/30 px-4 py-2 rounded-lg flex flex-row gap-2 justify-center items-center">
+            <PencilLine size={16}/>
+            Register
+          </button>
         </div>
     </div>
   )

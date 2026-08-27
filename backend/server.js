@@ -16,15 +16,6 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
-// app.use(express.urlencoded({ extended: true }));
-// app.use(
-//   rateLimit({
-//     windowMs: 15 * 60 * 1000,
-//     limit: 100,
-//     standardHeaders: 'draft-8',
-//     legacyHeaders: false,
-//   })
-// );
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
