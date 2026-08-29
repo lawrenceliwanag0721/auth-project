@@ -9,7 +9,6 @@ const {
   deleteUser,
   isTokenExists,
 } = require('../controllers/userController');
-
 const {
   validateSignUpMiddleware,
   validateSignInMiddleware,
@@ -18,11 +17,7 @@ const {
   validateUserMiddleware,
   validateUserUpdateMiddleware,
 } = require('../validators/userValidator');
-
 const router = express.Router();
-router.get('/test', (req, res) => {
-  res.json({msg: "hello from router!!"})
-});
 
 router.get('/', getUsers);
 router.get('/:id', getUserById);

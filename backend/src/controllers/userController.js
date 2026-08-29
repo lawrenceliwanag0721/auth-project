@@ -53,7 +53,11 @@ const signInUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-  const users = await User.find().select(['-password','-email']).sort({ createdAt: -1 });
+  const users = await 
+  User.find()
+  .select(['-password','-email'])
+  .sort({ createdAt: -1 });
+
   res.json(users);
 };
 
@@ -64,7 +68,10 @@ const getUserById = async (req, res) => {
     });
   }
 
-  const user = await User.findById(req.params.id).select(['-password','-email']);
+  const user = await 
+  User.findById(req.params.id)
+  .select(['-password','-email']);
+
   if (!user) {
     return res.status(404).json({
       message: 'User not found'
@@ -77,7 +84,8 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   const { username, email, password} = req.body;
 
-  const existingUser = await User.findOne({
+  const existingUser = await 
+  User.findOne({
       $or: [
           { username: username },
           { email: email }
@@ -90,7 +98,8 @@ const createUser = async (req, res) => {
     });
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await
+   bcrypt.hash(password, 10);
 
   const user = await User.create({
     username,
@@ -100,39 +109,50 @@ const createUser = async (req, res) => {
 
   const response = user.toObject();
   delete response.password;
-  res.status(201).json({message: "Registration complete!"});
+  res.status(201).json({
+    message: "Registration complete!"
+  });
 };
 
 const updateUser = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid user ID' });
+    return res.status(400).json({
+      message: 'Invalid user ID' 
+    });
   }
 
   const updates = { ...req.body };
   if (updates.password) {
-    updates.password = await bcrypt.hash(updates.password, 10);
+    updates.password = await 
+    bcrypt.hash(updates.password, 10);
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, updates, {
+  const user = await
+   User.findByIdAndUpdate(req.params.id, updates, {
     new: true,
     runValidators: true,
   }).select('-password');
 
   if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+    return res.status(404).json({ 
+      message: 'User not found' 
+    });
   }
-
   res.json(user);
 };
 
 const deleteUser = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid user ID' });
+    return res.status(400).json({
+       message: 'Invalid user ID' 
+    });
   }
 
   const user = await User.findByIdAndDelete(req.params.id);
   if (!user) {
-    return res.status(404).json({ message: 'User not found' });
+    return res.status(404).json({
+       message: 'User not found'
+    });
   }
 
   res.status(204).send();

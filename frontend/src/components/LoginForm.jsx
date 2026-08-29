@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 export default function LoginForm() {
   const router = useRouter();
   const signin = async (data) => {
-    const response = await fetch("http://localhost:5000/api/user/signin", {
+    const response = await
+      fetch("http://localhost:5000/api/user/signin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -26,7 +27,6 @@ export default function LoginForm() {
 
   const objectify = (e) =>{
     e.preventDefault();
-
     const formData = new FormData(e.target);
 
     const data = {

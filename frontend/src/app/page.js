@@ -9,7 +9,8 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/user/", {
+        const response = await
+          fetch("http://localhost:5000/api/user/", {
           method: "POST",
           credentials: "include",
         })
@@ -23,7 +24,6 @@ export default function Home() {
           setAuth(false);
       }
     }
-
     checkAuth()
   }, [router])
 

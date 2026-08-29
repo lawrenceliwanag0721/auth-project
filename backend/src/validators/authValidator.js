@@ -4,11 +4,11 @@ function validateAuth(req, res ,next) {
   try{
     const token = req.cookies?.AuthToken;
 
-      if (!token) {
-        return res.status(401).json({
-          message: "Authentication required",
-        });
-      }
+    if (!token) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {id: decoded.id};
