@@ -6,13 +6,12 @@ const Post = require('../models/Post');
 const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
-
+    const id = req.user.id
     const post = await Post.create({
       title,
       content,
-      author: req.user.id,
+      author: id,
     });
-    await post.populate("author", "name");
 
     return res.status(201).json(post);
   } catch (error) {
@@ -33,7 +32,8 @@ const getPosts = async (req, res) => {
 
   const postsWithPerm = posts.map(post => ({
     ...post.toObject(),
-    canDelete: userId.toString() === post.author._id.toString()
+    canDelete: userId.toString() === post.author._id.toString(),
+    canEdit: userId.toString() === post.author._id.toString(),
   }));
 
   res.json(postsWithPerm);
