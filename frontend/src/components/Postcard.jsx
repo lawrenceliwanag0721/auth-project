@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Heart, MessageCircle, Share2, Bookmark, ImagePlus } from 'lucide-react'
 
 export default function PostCard({ post }) {
-  const [liked, setLiked] = useState(false)
+  const [liked, setLiked] = useState(post.liked)
   const [likes, setLikes] = useState(post.likes)
 
   function timeAgo(date) {
@@ -29,25 +29,16 @@ export default function PostCard({ post }) {
   }
 
   const toggleLike = async () => {
-    if (!post.liked) {
-        const response = await fetch(
-            `http://localhost:5000/api/post/like/${post._id}`,
-            {
-                method: "POST",
-                credentials: "include"
-            }
-        );
-
-        if (!response.ok) {
-            return;
-        }
+    const response = await fetch(
+      `http://localhost:5000/api/post/like/${post._id}`,
+      {
+          method: (post.liked ? "DELETE" : "POST"),
+          credentials: "include"
+      }
+    );
+    if (response.ok) {
+    setLiked(prev => !prev);
     }
-    alert("already liked!")
-    // setLiked(prev => !prev);
-
-    // setLikes(prev => (
-    //     post.isLiked ? prev - 1 : prev + 1
-    // ));
   };
 
   const actions = [
@@ -55,7 +46,7 @@ export default function PostCard({ post }) {
       key: "like",
       icon: Heart,
       count: likes,
-      active: post.liked,
+      active: liked,
       onClick: toggleLike,
     },
     { key: "comment", icon: MessageCircle, count: 0 },

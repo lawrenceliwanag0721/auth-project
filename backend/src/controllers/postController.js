@@ -41,8 +41,33 @@ const setLike = async (req, res) =>{
     }
   }
 };
+const deleteLike = async (req, res) => {
+      try {
+        const userId = req.user.id;
+        const postId = req.params.id;
 
-const postmodifier = async (posts, userId) => {
+        const deletedLike = await Like.findOneAndDelete({
+            userId: userId,
+            postId: postId
+        });
+
+        if (!deletedLike) {
+            return res.status(404).json({
+                message: "Like not found"
+            });
+        }
+
+        return res.sendStatus(204);
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message: "Failed to remove like"
+        });
+    }
+}
+const postAuthorize = async (posts, userId) => {
   const likes = await Like.find({userId: userId})
 
   const userLikes = new Set(
@@ -59,6 +84,14 @@ const postmodifier = async (posts, userId) => {
   return postdocs;
 };
 
+const postAuthorizeSingle = async (post, userId) =>{
+  const like = await Like.findOne({userId: userId, postId: post._id});
+  post.canDelete = userId.toString() === post.author._id.toString();
+  post.canEdit = userId.toString() === post.author._id.toString();
+  post.liked = !!like;
+  return post;
+};
+
 const getPosts = async (req, res) => {
   const userId = req.user.id;
 
@@ -66,9 +99,9 @@ const getPosts = async (req, res) => {
     .populate('author', 'username')
     .sort({ createdAt: -1 });
 
-  const postdocs = await postmodifier(posts, userId);
+  const authorizedPost = await postAuthorize(posts, userId);
 
-  res.json(postdocs);
+  res.json(authorizedPost);
 };
 
 const getPostById = async (req, res) => {
@@ -76,15 +109,14 @@ const getPostById = async (req, res) => {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
   const userId = req.user.id;
-  const post = await Post.findById(req.params.id).populate('author', 'username' ).lean();
+  const post = await Post.findById(req.params.id).populate('author', 'username').lean();
 
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
+  const authorizedPost = await postAuthorizeSingle(post, userId);
 
-  const like = await Like.findOne({userId: userId, postId: post._id});
-  if(like) post.liked = true;
-  res.json(post);
+  res.json(authorizedPost);
 };
 
 const deletePost = async (req, res) => {
@@ -139,4 +171,5 @@ module.exports = {
   updatePost,
   deletePost,
   setLike,
+  deleteLike,
 };
