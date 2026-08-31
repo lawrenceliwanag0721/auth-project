@@ -44,10 +44,8 @@ const getPostById = async (req, res) => {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
 
-  const post = await Post.findById(req.params.id).populate(
-    'author',
-    'username email'
-  );
+  const post = await Post.findById(req.params.id).populate('author', 'username' );
+
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }

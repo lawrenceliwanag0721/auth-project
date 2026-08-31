@@ -13,6 +13,7 @@ const router = express.Router();
 router.get('/', validateAuth, getPosts);
 router.post('/', validateAuth, createPost);
 router.delete('/:id', validateAuth, deletePost);
+router.get('/:id', validateAuth, getPostById);
 //router.patch('/:id', updatePost);
-//router.get('/:id', getPostById);
+
 module.exports = router;

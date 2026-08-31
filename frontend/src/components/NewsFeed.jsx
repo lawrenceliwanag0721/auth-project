@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from 'react'
+import Link from "next/link";
 import { Heart, MessageCircle, Share2, Bookmark, ImagePlus } from 'lucide-react'
 
 const POSTS = [
@@ -203,6 +204,7 @@ function PostCard({ post }) {
     if (months < 12) return `${months}mo ago`;
 
     const years = Math.floor(days / 365);
+    
     return `${years}y ago`;
   }
 
@@ -271,13 +273,15 @@ export default function NewsFeed({ props }) {
       <div className="hidden xl:flex justify-end w-full max-w-sm p-4">
         <Sidebar user={USER}/>
       </div>
-      <div className='w-full max-w-3xl p-4'>
+      <div className='w-full max-w-2xl p-4'>
         <div className="flex flex-col gap-4 flex-1">
           <Tabs active={active} setActive={setActive} />
           <Composer/>
           <div className="flex flex-col gap-4">
             {props.map((post) => (
-              <PostCard key={post._id} post={post} />
+              <Link key={post._id} href={`status/${post._id}`}>
+                <PostCard key={post._id} post={post} />
+              </Link>
             ))}
           </div>
         </div>
