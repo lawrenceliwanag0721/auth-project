@@ -1,4 +1,3 @@
-"use client"
 import React from 'react'
 import { PencilLine } from 'lucide-react';
 import { useRouter } from 'next/navigation'

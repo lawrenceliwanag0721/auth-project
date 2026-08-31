@@ -1,49 +1,29 @@
-'use client'
-
 import NewsFeed from '@/components/NewsFeed'
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  const router = useRouter();
-  const [isAuth, setAuth] = useState(false);
-  const [posts, setPosts] = useState([]);
+export default async function Page() {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('AuthToken')?.value;
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authRes = await fetch("http://localhost:5000/api/user/", {
-          method: "POST",
-          credentials: "include",
-        });
+  if (!authToken) {
+    redirect('/')
+  }
 
-        if (!authRes.ok) {
-          router.replace('/');
-          return;
-        }
+  const postsRes = await fetch("http://localhost:5000/api/post/", {
+    method: "GET",
+    headers: {
+      Cookie: `AuthToken=${authToken}`,
+    },
+  });
 
-        setAuth(true);
-
-        const postsRes = await fetch("http://localhost:5000/api/post/", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        if (postsRes.ok) {
-          const data = await postsRes.json();
-          setPosts(data);
-        }
-      } catch (err) {
-        console.log('Something went wrong');
-        router.replace('/');
-      }
-    };
-    checkAuth();
-  }, [router]);
+  if(postsRes.status === 401) redirect('/');
+  if (!postsRes.ok) throw new Error('Failed to fetch posts');
+  const posts = postsRes.ok ? await postsRes.json() :[];
 
   return (
     <main className="flex flex-col h-screen w-full items-center">
-      {isAuth && <NewsFeed props={posts} />}
+      <NewsFeed props={posts}/>
     </main>
   );
 }

@@ -1,33 +1,28 @@
-'use client'
-import React, { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { cookies } from 'next/headers'
+import PostCard from '@/components/Postcard';
 
-export default function page() {
-  const { postId } = useParams();
-  const [post, setPost] = useState([]);
-  useEffect(() => {
-    const getPost = async () => {
-      try{
-        const response = await
-          fetch(`http://localhost:5000/api/post/${postId}`,{
-            method: "GET",
-            credentials: "include",
-          })
-        
-        if (response.ok){
-          const data = await response.json();
-          setPost(data);
-        }
-      }catch(error){
-        console.log(error)
-      }
-    }
-    getPost();
-  },[]);
+export default async function page({params}) {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('AuthToken')?.value;
+  const {postId} = await params;
+
+  const response = await
+    fetch(`http://localhost:5000/api/post/${postId}`,{
+      method: "GET",
+      headers: {
+        Cookie: `AuthToken=${authToken}`
+      },
+      cache: 'no-store',
+    });
+  
+  const data = await response.json();
+  console.log(data);
   
   return (
-    <div className='h-screen flex items-center justify-center'>
-      {post.content}
+    <div className='h-screen flex justify-center w-full py-16'>
+      <div className='w-full max-w-2xl'>
+        <PostCard post={data}/>
+      </div>
     </div>
   )
 }

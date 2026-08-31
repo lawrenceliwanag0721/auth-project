@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
 const Post = require('../models/Post');
+const Like = require('../models/Like');
 
 const createPost = async (req, res) => {
   try {
@@ -23,6 +23,42 @@ const createPost = async (req, res) => {
   }
 };
 
+const setLike = async (req, res) =>{
+  const id = req.user.id;
+  const postId = req.params.id;
+
+  try{
+    const like = await Like.create({
+      userId: id,
+      postId: postId
+    });
+    console.log(like);
+
+    return res.sendStatus(204); 
+  }catch(error){
+    if (error.code === 11000) {
+      console.log("like duplicate");
+    }
+  }
+};
+
+const postmodifier = async (posts, userId) => {
+  const likes = await Like.find({userId: userId})
+
+  const userLikes = new Set(
+    likes.map((like) => like.postId.toString())
+  )
+
+  const postdocs = posts.map(post => ({
+    ...post.toObject(),
+    canDelete: userId.toString() === post.author._id.toString(),
+    canEdit: userId.toString() === post.author._id.toString(),
+    liked: userLikes.has(post._id.toString())
+  }));
+
+  return postdocs;
+};
+
 const getPosts = async (req, res) => {
   const userId = req.user.id;
 
@@ -30,26 +66,24 @@ const getPosts = async (req, res) => {
     .populate('author', 'username')
     .sort({ createdAt: -1 });
 
-  const postsWithPerm = posts.map(post => ({
-    ...post.toObject(),
-    canDelete: userId.toString() === post.author._id.toString(),
-    canEdit: userId.toString() === post.author._id.toString(),
-  }));
+  const postdocs = await postmodifier(posts, userId);
 
-  res.json(postsWithPerm);
+  res.json(postdocs);
 };
 
 const getPostById = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
-
-  const post = await Post.findById(req.params.id).populate('author', 'username' );
+  const userId = req.user.id;
+  const post = await Post.findById(req.params.id).populate('author', 'username' ).lean();
 
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
   }
 
+  const like = await Like.findOne({userId: userId, postId: post._id});
+  if(like) post.liked = true;
   res.json(post);
 };
 
@@ -97,10 +131,12 @@ const updatePost = async (req, res) => {
 
   res.json(post);
 };
+
 module.exports = {
   getPosts,
   getPostById,
   createPost,
   updatePost,
   deletePost,
+  setLike,
 };
