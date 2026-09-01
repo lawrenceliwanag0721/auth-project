@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${nunitoSans.className} min-h-full flex flex-col`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col text-lg">{children}</body>
     </html>
   );
 }

@@ -32,13 +32,12 @@ export default function PostCard({ post }) {
     const response = await fetch(
       `http://localhost:5000/api/post/like/${post._id}`,
       {
-          method: (post.liked ? "DELETE" : "POST"),
+          method: liked ? "DELETE" : "POST",
           credentials: "include"
       }
     );
-    if (response.ok) {
+    if (!response.ok) return;
     setLiked(prev => !prev);
-    }
   };
 
   const actions = [
