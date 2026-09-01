@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { Heart, MessageCircle, Share2, Bookmark, ImagePlus } from 'lucide-react'
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, isReply = false }) {
   const [liked, setLiked] = useState(post.liked)
   const [likes, setLikes] = useState(post.likes)
 
@@ -28,7 +28,9 @@ export default function PostCard({ post }) {
     return `${years}y ago`;
   }
 
-  const toggleLike = async () => {
+  const toggleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const response = await fetch(
       `http://localhost:5000/api/post/like/${post._id}`,
       {
@@ -54,7 +56,11 @@ export default function PostCard({ post }) {
   ]
 
   return (
-    <div className="border border-black/30 rounded-lg p-4 flex flex-col gap-3 w-full">
+    <div
+      className={`p-4 flex flex-col gap-3 w-full ${
+        isReply ? ' border-black/15 ' : 'rounded-lg border border-black/30'
+      }`}
+    >
       <div className="flex flex-row items-center gap-3">
         <div className="w-9 h-9 rounded-full border border-black/30 flex items-center justify-center text-sm text-black">
           {post.author.username.charAt(0)}
