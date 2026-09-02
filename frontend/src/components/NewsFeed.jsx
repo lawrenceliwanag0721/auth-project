@@ -3,73 +3,6 @@ import React, { useState } from 'react'
 import Link from "next/link";
 import PostCard from './Postcard';
 import Composer from './Composer';
-const POSTS = [
-  {
-    id: 1,
-    name: "Aiko Tanaka",
-    handle: "@aiko",
-    time: "2h",
-    content: "Shipped the new auth flow today. Cookies > localStorage for this one, fight me.",
-    likes: 24,
-    comments: 6,
-    image: true,
-  },
-  {
-    id: 2,
-    name: "Marcus Reyes",
-    handle: "@marcusr",
-    time: "4h",
-    content: "Refactored the whole dashboard into array-driven components. 40% less JSX, feels good.",
-    likes: 58,
-    comments: 12,
-  },
-  {
-    id: 3,
-    name: "Priya Nair",
-    handle: "@priyan",
-    time: "9h",
-    content: "Reminder: CORS errors are usually a you problem, not a browser problem.",
-    likes: 91,
-    comments: 3,
-  },
-  {
-    id: 4,
-    name: "Elena Vasquez",
-    handle: "@elenav",
-    time: "11h",
-    content: "TIL you can debug HMR issues over LAN by just checking your dev server's allowed hosts config first.",
-    likes: 37,
-    comments: 8,
-  },
-  {
-    id: 5,
-    name: "Jonah Kim",
-    handle: "@jonahk",
-    time: "13h",
-    content: "Custom useForm hook finally feels right. No more prop-drilling validation state everywhere.",
-    likes: 64,
-    comments: 15,
-    image: true,
-  },
-  {
-    id: 6,
-    name: "Fatima Al-Sayed",
-    handle: "@fatimas",
-    time: "1d",
-    content: "JWT in an httpOnly cookie + short expiry + refresh route. Boring, but it works.",
-    likes: 102,
-    comments: 21,
-  },
-  {
-    id: 7,
-    name: "Devon Marsh",
-    handle: "@devonm",
-    time: "1d",
-    content: "Admin dashboard CRUD is done. Turns out most of it really is just a table and a modal.",
-    likes: 45,
-    comments: 9,
-  },
-]
 
 const USER = {
   name: "Aruji Dono",
@@ -82,7 +15,6 @@ const USER = {
   ],
 }
 
-
 function EditProfileButton() {
   const handleClick = () => {
 
@@ -92,7 +24,7 @@ function EditProfileButton() {
     <button
       onClick={handleClick}
       className="relative overflow-hidden w-full bg-black text-white text-lg px-4 py-2 rounded-lg">
-      Edit Profile
+      Profile
     </button>
   )
 }
@@ -146,8 +78,13 @@ function Tabs({ active, setActive }) {
   )
 }
 
-export default function NewsFeed({ props }) {
+export default function NewsFeed({ initialProps }) {
   const [active, setActive] = useState("For You")
+  let [posts, setPosts] = useState(initialProps);
+
+  const addPost = (newPost) => {
+    setPosts([newPost,...posts])
+  }
 
   return (
     <div className="bg-white rounded-lg flex flex-row w-full justify-center gap-6 px-8">
@@ -157,9 +94,9 @@ export default function NewsFeed({ props }) {
       <div className='w-full max-w-2xl p-4'>
         <div className="flex flex-col gap-4 flex-1">
           <Tabs active={active} setActive={setActive} />
-          <Composer/>
+          <Composer onCreatePost={addPost}/>
           <div className="flex flex-col gap-4">
-            {props.map((post) => (
+            {posts.map((post) => (
               <Link key={post._id} href={`status/${post._id}`}>
                 <PostCard key={post._id} post={post} />
               </Link>

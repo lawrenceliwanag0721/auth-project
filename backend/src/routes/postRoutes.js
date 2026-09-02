@@ -8,17 +8,19 @@ const {
   deletePost,
   setLike,
   deleteLike,
+  replytoPost
 } = require('../controllers/postController');
 
 const router = express.Router();
 
 router.get('/', validateAuth, getPosts);
 router.post('/', validateAuth, createPost);
-//router.post('/:id', validateAuth, replytoPost);
-router.post('/like/:id', validateAuth, setLike);
-router.delete('/like/:id', validateAuth, deleteLike);
+//router.get('/:id/reply', validateAuth, getReply);
+router.post('/:id/reply', validateAuth, replytoPost);
 router.delete('/:id', validateAuth, deletePost);
 router.get('/:id', validateAuth, getPostById);
+router.post('/like/:id', validateAuth, setLike);
+router.delete('/like/:id', validateAuth, deleteLike);
 //router.patch('/:id', updatePost);
 
 module.exports = router;

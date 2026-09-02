@@ -23,7 +23,7 @@ export default async function Page() {
 
   return (
     <main className="flex flex-col h-screen w-full items-center">
-      <NewsFeed props={posts}/>
+      <NewsFeed initialProps={posts}/>
     </main>
   );
 }

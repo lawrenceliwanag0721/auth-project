@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const Like = require('../models/Like');
+const Reply = require('../models/Reply');
 
 const createPost = async (req, res) => {
   try {
@@ -13,6 +14,8 @@ const createPost = async (req, res) => {
       author: id,
     });
 
+    await post.populate('author', 'username');
+
     return res.status(201).json(post);
   } catch (error) {
     console.error(error);
@@ -22,7 +25,6 @@ const createPost = async (req, res) => {
     });
   }
 };
-
 const setLike = async (req, res) =>{
   const id = req.user.id;
   const postId = req.params.id;
@@ -83,7 +85,6 @@ const postAuthorize = async (posts, userId) => {
 
   return postdocs;
 };
-
 const postAuthorizeSingle = async (post, userId) =>{
   const like = await Like.findOne({userId: userId, postId: post._id});
   post.canDelete = userId.toString() === post.author._id.toString();
@@ -91,7 +92,6 @@ const postAuthorizeSingle = async (post, userId) =>{
   post.liked = !!like;
   return post;
 };
-
 const getPosts = async (req, res) => {
   const userId = req.user.id;
 
@@ -103,7 +103,6 @@ const getPosts = async (req, res) => {
 
   res.json(authorizedPost);
 };
-
 const getPostById = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
@@ -118,7 +117,6 @@ const getPostById = async (req, res) => {
 
   res.json(authorizedPost);
 };
-
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findOne({ _id: req.params.id });
@@ -146,7 +144,6 @@ const deletePost = async (req, res) => {
     });
   }
 };
-
 const updatePost = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
@@ -163,6 +160,30 @@ const updatePost = async (req, res) => {
 
   res.json(post);
 };
+const getReply = () => {
+  
+}
+const replytoPost = async (req, res) => {
+  const { content } = req.body;
+  const userId = req.user.id
+  const postId = req.params.id;
+  try {
+    const reply = await Reply.create({
+      content: content,
+      author: userId,
+      parentPost: postId,
+    });
+    await reply.populate('author', 'username');
+
+    return res.status(201).json(reply);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Failed to create reply",
+    });
+  }
+}
 
 module.exports = {
   getPosts,
@@ -172,4 +193,5 @@ module.exports = {
   deletePost,
   setLike,
   deleteLike,
+  replytoPost,
 };

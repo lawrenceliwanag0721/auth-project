@@ -1,21 +1,23 @@
 'use client'
-import React, { useState } from 'react'
-import { ImagePlus } from 'lucide-react'
-import { createPost } from '@/app/actions/createPost'
 
-export default function Composer({onCreatePost}) {
-  const [title, setTitle] = useState('')
+import React, { useState } from 'react'
+import { replyToPost } from '@/app/actions/replytoPost'
+
+export default function ReplyComposer({ postId, onCreateReply }) {
+
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handlePost = async () => {
-    if (!title.trim() || !content.trim()) return
+  const handleReply = async () => {
+
+    if (!content.trim()) return
+
     setLoading(true)
+
     try {
-      const post = await createPost(title, content)
-      console.log('Created:', post)
-      onCreatePost(post);
-      setTitle('')
+      const reply = await replyToPost(postId, content)
+      console.log('Created:', reply)
+      onCreateReply(reply)
       setContent('')
     } catch (err) {
       console.error(err)
@@ -26,13 +28,7 @@ export default function Composer({onCreatePost}) {
 
   return (
     <div className="bg-white border border-black/30 rounded-lg p-4 flex flex-col gap-3 w-full">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
-        className="w-full text-black placeholder:text-black/60 outline-none text-lg font-medium"
-      />
+
       <textarea
         rows={2}
         value={content}
@@ -40,18 +36,22 @@ export default function Composer({onCreatePost}) {
         placeholder="What's on your mind?"
         className="w-full resize-none text-black placeholder:text-black/60 outline-none text-lg"
       />
+
       <div className="flex flex-row items-center justify-between border-t border-black/10 pt-3">
+
         <button className="text-black/50 hover:text-black transition-colors">
-          <ImagePlus size={18} />
         </button>
+
         <button
-          onClick={handlePost}
+          onClick={handleReply}
           disabled={loading}
           className="bg-mist-900 text-white text-lg px-4 py-2 rounded-lg disabled:opacity-50"
         >
-          {loading ? 'Posting...' : 'Post'}
+          {loading ? 'Replying...' : 'Reply'}
         </button>
+
       </div>
+
     </div>
   )
 }
