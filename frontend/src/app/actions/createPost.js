@@ -1,6 +1,6 @@
 'use server'
 import { cookies } from 'next/headers'
-//import { revalidatePath } from 'next/cache'
+
 
 export async function createPost(title, content) {
   const cookieStore = await cookies()
@@ -16,13 +16,13 @@ export async function createPost(title, content) {
   })
 
   if (!res.ok) {
-  const errBody = await res.json().catch(() => null)
-  console.error('Status:', res.status, errBody)
-  throw new Error('Failed to create post')
+    const errBody = await res.json().catch(() => null)
+    console.error('Status:', res.status, errBody)
+    throw new Error('Failed to create post')
   }
   const data = await res.json();
   console.log("this is what it looks like:")
   console.log(data)
-  //revalidatePath('/home')
+
   return data;
 }
