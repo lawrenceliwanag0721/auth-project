@@ -22,21 +22,21 @@ export default function Sidebar({ user }) {
 
       <div className="flex flex-col items-center gap-3 text-center">
 
-        <div className="w-16 h-16 rounded-full border border-black/30 flex items-center justify-center text-xl text-black">
-          {user.name.charAt(0)}
+        <div className='flex flex-row gap-4 w-full'>
+            <div className="w-16 h-16 rounded-lg border border-black/30 flex items-center justify-center text-xl text-black">
+              {user.name.charAt(0)}
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg text-black text-left">
+                {user.name}
+              </span>
+              <span className="text-xs text-black/50 text-left">
+                {user.handle}
+              </span>
+            </div>
         </div>
 
-        <div className="flex flex-col leading-tight">
-          <span className="text-lg text-black">
-            {user.name}
-          </span>
-
-          <span className="text-xs text-black/50">
-            {user.handle}
-          </span>
-        </div>
-
-        <p className="text-xs text-black/70">
+        <p className="text-xs text-black/70 text-left">
           {user.bio}
         </p>
 
