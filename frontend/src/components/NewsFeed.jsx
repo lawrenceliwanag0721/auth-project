@@ -36,7 +36,6 @@ export default function NewsFeed({ initialProps }) {
           />
           {active === "For You" && <PostFeedSection posts={initialProps} />}
           {active === "Following" && <FollowingFeedSection/>}
-          
         </div>
       </section>
 

@@ -1,9 +1,6 @@
 'use client'
-
 import React, { useState } from 'react'
-
 import Link from 'next/link'
-
 import PostCard from './Postcard'
 import Composer from './Composer'
 
@@ -16,7 +13,7 @@ export default function PostFeedSection({ posts }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4">
       <Composer
         onCreatePost={addPostToFeed}
       />

@@ -4,7 +4,6 @@ import ReplyComposer from './ReplyComposer'
 import ReplySection from './ReplySection';
 import { getReplies } from '@/app/actions/getReplies';
 
-
 export default async function PostDetail({ post, postId }) {
   const replies = await getReplies(postId)
   return (
