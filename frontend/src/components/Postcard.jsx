@@ -74,8 +74,8 @@ export default function PostCard({ post, isReply = false }) {
       <p className="text-lg text-black/90">{post.content}</p>
 
       {post.image && (
-        <div className="w-full h-48 border border-black/30 rounded-lg flex items-center justify-center bg-black/[0.02]">
-          <ImagePlus size={22} className="text-black/30" />
+        <div className="w-full border border-black/30 rounded-lg flex items-center justify-center bg-black/[0.02]">
+          <img className="rounded-lg" src={`http://localhost:5000${post.image}`}/>
         </div>
       )}
 

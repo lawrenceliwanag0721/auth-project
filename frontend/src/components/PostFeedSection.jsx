@@ -5,7 +5,6 @@ import PostCard from './Postcard'
 import Composer from './Composer'
 
 export default function PostFeedSection({ posts }) {
-
   const [postList, setPostList] = useState(posts)
 
   const addPostToFeed = (newPost) => {

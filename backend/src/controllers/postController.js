@@ -8,18 +8,20 @@ const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
     const id = req.user.id
+
     const post = await Post.create({
       title,
       content,
       author: id,
+      image: req.file ? `/uploads/posts/${req.file.filename}` : null
     });
 
     await post.populate('author', 'username');
 
     return res.status(201).json(post);
+    
   } catch (error) {
     console.error(error);
-
     return res.status(500).json({
       message: "Failed to create post",
     });

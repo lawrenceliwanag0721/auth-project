@@ -1,5 +1,6 @@
 const express = require('express');
 const validateAuth = require('../validators/authValidator');
+const upload = require('../middleware/upload')
 const {
   getPosts,
   getPostById,
@@ -15,7 +16,7 @@ const {
 const router = express.Router();
 
 router.get('/', validateAuth, getPosts);
-router.post('/', validateAuth, createPost);
+router.post('/', validateAuth, upload.single('image'), createPost);
 router.get('/:id/reply', validateAuth, getReply);
 router.post('/:id/reply', validateAuth, replytoPost);
 router.delete('/:id', validateAuth, deletePost);
