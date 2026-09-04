@@ -160,8 +160,17 @@ const updatePost = async (req, res) => {
 
   res.json(post);
 };
-const getReply = () => {
-  
+const getReply = async (req, res) => {
+  const userId = req.user.id;
+  const postId = req.params.id;
+
+  const replies = await Reply.find({parentPost: postId})
+    .populate('author', 'username')
+    .sort({ createdAt: -1 });
+
+  const authorizedPost = await postAuthorize(replies, userId);
+
+  res.json(authorizedPost);
 }
 const replytoPost = async (req, res) => {
   const { content } = req.body;
@@ -194,4 +203,5 @@ module.exports = {
   setLike,
   deleteLike,
   replytoPost,
+  getReply,
 };

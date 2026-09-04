@@ -18,7 +18,7 @@ function EditProfileButton() {
 
 export default function Sidebar({ user }) {
   return (
-    <div className="flex flex-col gap-4 w-64 h-fit sticky top-8">
+    <div className="flex flex-col gap-4 w-64 h-fit sticky top-4">
 
       <div className="flex flex-col items-center gap-3 text-center">
 

@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import Sidebar from './Sidebar'
 import Tabs from './Tabs'
 import PostFeedSection from './PostFeedSection'
+import FollowingFeedSection from './FollowingFeedSection'
 
 const USER = {
   name: "Aruji Dono",
@@ -23,17 +24,19 @@ export default function NewsFeed({ initialProps }) {
 
   return (
     <main className="bg-white rounded-lg flex flex-row w-full justify-center gap-6 px-8">
-      <aside className="hidden xl:flex justify-end w-full max-w-sm p-4">
+      <aside className="hidden xl:flex justify-end w-full max-w-sm p-4 h-auto">
         <Sidebar user={USER} />
       </aside>
 
       <section className="w-full max-w-2xl p-4">
-        <div className="flex flex-col gap-4 flex-1">
+        <div className="flex flex-col gap-4">
           <Tabs
             active={active}
             setActive={setActive}
           />
-          <PostFeedSection posts={initialProps} />
+          {active === "For You" && <PostFeedSection posts={initialProps} />}
+          {active === "Following" && <FollowingFeedSection/>}
+          
         </div>
       </section>
 
