@@ -8,7 +8,6 @@ export default function Tabs({ active, setActive }) {
 
   return (
     <div className="flex flex-row w-full sticky top-0 bg-white/70 backdrop-blur-md z-10">
-
       {tabs.map((tab) => (
         <button
           key={tab}

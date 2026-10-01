@@ -16,6 +16,20 @@ function EditProfileButton() {
   )
 }
 
+function LogoutButton() {
+  const handleClick = () => {
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative overflow-hidden w-full bg-white text-red-500 text-lg px-4 py-2 rounded-lg border border-red-500"
+    >
+      Logout
+    </button>
+  )
+}
+
 export default function Sidebar({ user }) {
   return (
     <div className="flex flex-col gap-4 w-64 h-fit sticky top-4">
@@ -62,7 +76,7 @@ export default function Sidebar({ user }) {
       </div>
 
       <EditProfileButton />
-
+      <LogoutButton />
     </div>
   )
 }

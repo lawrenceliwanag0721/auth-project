@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const Like = require('../models/Like');
 const Reply = require('../models/Reply');
+const Bookmark = require('../models/Bookmark');
 
 const createPost = async (req, res) => {
   try {
@@ -27,18 +28,19 @@ const createPost = async (req, res) => {
     });
   }
 };
+
 const setLike = async (req, res) =>{
   const id = req.user.id;
   const postId = req.params.id;
 
   try{
-    const like = await Like.create({
+    await Like.create({
       userId: id,
       postId: postId
     });
-    console.log(like);
 
     return res.sendStatus(204); 
+
   }catch(error){
     if (error.code === 11000) {
       console.log("like duplicate");
@@ -71,6 +73,48 @@ const deleteLike = async (req, res) => {
         });
     }
 }
+
+const setBookmark = async (req, res) => {
+  const userId = req.user.id;
+  const postId = req.params.id;
+
+  if (!mongoose.isValidObjectId(postId)) {
+    return res.status(400).json({ 
+      message: 'Invalid post id' 
+    });
+  }
+
+  try {
+    const postExists = await Post.exists({
+      _id: postId 
+    });
+
+    if (!postExists) {
+      return res.status(404).json({
+         message: 'Post not found' 
+      });
+    }
+
+    const bookmark = await Bookmark.create({
+        userId,
+        postId 
+    });
+
+    return res.status(201).json(bookmark);
+
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: 'Bookmark already exists'
+      });
+    }
+    console.error(error);
+    return res.status(500).json({ 
+      message: 'Server error' 
+    });
+  }
+};
+
 const postAuthorize = async (posts, userId) => {
   const likes = await Like.find({userId: userId})
 
@@ -94,17 +138,33 @@ const postAuthorizeSingle = async (post, userId) =>{
   post.liked = !!like;
   return post;
 };
+
+
 const getPosts = async (req, res) => {
   const userId = req.user.id;
+
+  // const cachedPosts = await redis.get("posts");
+
+  // if (cachedPosts) {
+  //   const authorizedPost = await postAuthorize(cachedPosts, userId);
+  //   return res.json(JSON.parse(authorizedPost));
+  // }
 
   const posts = await Post.find()
     .populate('author', 'username')
     .sort({ createdAt: -1 });
 
+  // await redis.set(
+  //     "posts",
+  //     JSON.stringify(posts),
+  //     { EX: 60 }
+  // );
+
   const authorizedPost = await postAuthorize(posts, userId);
 
   res.json(authorizedPost);
 };
+
 const getPostById = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
@@ -119,6 +179,7 @@ const getPostById = async (req, res) => {
 
   res.json(authorizedPost);
 };
+
 const deletePost = async (req, res) => {
   try {
     const post = await Post.findOne({ _id: req.params.id });
@@ -146,6 +207,7 @@ const deletePost = async (req, res) => {
     });
   }
 };
+
 const updatePost = async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: 'Invalid post ID' });
