@@ -19,7 +19,11 @@ export default async function page({params}) {
       },
       cache: 'no-store',
     });
-
+  
+  if(!response.ok){
+    redirect('/');
+  }
+  
   const data = await response.json();
   
   return (

@@ -74,13 +74,21 @@ export default function Composer({ onCreatePost }) {
 
       <div className="flex flex-row items-center justify-between border-t border-black/10 pt-3">
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="text-black/50 hover:text-black transition-colors"
-        >
-          <ImagePlus size={18} />
-        </button>
+        <div className='flex flex-row gap-3'>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-black/50 hover:text-black transition-colors"
+          >
+            <ImagePlus size={18} />
+          </button>
+
+          {image &&
+            <div className="text-xs bg-zinc-200 rounded-lg p-2">
+              {image.name}
+            </div>          
+          }
+        </div>
 
         <button
           onClick={handlePost}

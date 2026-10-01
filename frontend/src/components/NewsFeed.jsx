@@ -23,7 +23,7 @@ export default function NewsFeed({ initialProps }) {
   const [active, setActive] = useState("For You")
 
   return (
-    <main className="bg-white rounded-lg flex flex-row w-full justify-center gap-6 px-8">
+    <main className="bg-white rounded-lg flex flex-row w-full justify-center gap-6">
       <aside className="hidden xl:flex justify-end w-full max-w-sm p-4 h-auto">
         <Sidebar user={USER} />
       </aside>

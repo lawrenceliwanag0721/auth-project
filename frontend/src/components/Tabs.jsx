@@ -7,7 +7,7 @@ export default function Tabs({ active, setActive }) {
   const tabs = ["For You", "Following"]
 
   return (
-    <div className="flex flex-row w-full sticky top-0 bg-white z-10">
+    <div className="flex flex-row w-full sticky top-0 bg-white/70 backdrop-blur-md z-10">
 
       {tabs.map((tab) => (
         <button

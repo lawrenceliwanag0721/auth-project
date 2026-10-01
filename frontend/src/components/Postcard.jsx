@@ -58,7 +58,7 @@ export default function PostCard({ post, isReply = false }) {
   return (
     <div
       className={`p-4 flex flex-col gap-3 w-full ${
-        isReply ? ' border-black/15 ' : 'rounded-lg border border-black/30'
+        isReply ? ' ' : 'rounded-lg border border-black/10 hover:border-black/30'
       }`}
     >
       <div className="flex flex-row items-center gap-3">
