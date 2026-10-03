@@ -23,6 +23,8 @@ router.delete('/:id', validateAuth, deletePost);
 router.get('/:id', validateAuth, getPostById);
 router.post('/like/:id', validateAuth, setLike);
 router.delete('/like/:id', validateAuth, deleteLike);
+// router.post('/:id/bookmark', validateAuth, setBookmark);
+// router.delete('/:id/bookmark', validateAuth, deleteBookmark);
 //router.patch('/:id', updatePost);
 
 module.exports = router;

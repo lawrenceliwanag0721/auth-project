@@ -14,13 +14,14 @@ const createPost = async (req, res) => {
       title,
       content,
       author: id,
-      image: req.file ? `/uploads/posts/${req.file.filename}` : null
+      image: req.file ?
+        `/uploads/posts/${req.file.filename}` : null
     });
 
     await post.populate('author', 'username');
 
     return res.status(201).json(post);
-    
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -39,7 +40,7 @@ const setLike = async (req, res) =>{
       postId: postId
     });
 
-    return res.sendStatus(204); 
+    return res.sendStatus(204);
 
   }catch(error){
     if (error.code === 11000) {
@@ -79,25 +80,25 @@ const setBookmark = async (req, res) => {
   const postId = req.params.id;
 
   if (!mongoose.isValidObjectId(postId)) {
-    return res.status(400).json({ 
-      message: 'Invalid post id' 
+    return res.status(400).json({
+      message: 'Invalid post id'
     });
   }
 
   try {
     const postExists = await Post.exists({
-      _id: postId 
+      _id: postId
     });
 
     if (!postExists) {
       return res.status(404).json({
-         message: 'Post not found' 
+         message: 'Post not found'
       });
     }
 
     const bookmark = await Bookmark.create({
         userId,
-        postId 
+        postId
     });
 
     return res.status(201).json(bookmark);
@@ -109,27 +110,91 @@ const setBookmark = async (req, res) => {
       });
     }
     console.error(error);
-    return res.status(500).json({ 
-      message: 'Server error' 
+    return res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
+const deleteBookmark = async (req, res) => {
+  const userId = req.user.id;
+  const postId = req.params.id;
+
+  if (!mongoose.isValidObjectId(postId)) {
+    return res.status(400).json({
+      message: 'Invalid post id'
+    });
+  }
+
+  try {
+    const deletedBookmark = await Bookmark.findOneAndDelete({
+        userId: userId,
+        postId: postId
+    });
+
+    if (!deletedBookmark) {
+        return res.status(404).json({
+            message: "bookmark not found"
+        });
+    }
+
+    return res.status(204).json();
+
+  }catch(error) {
+    return res.status(500).json({
+      message: "Failed to remove bookmark"
+    });
+  }
+}
+
+const getBookmark = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const bookmarks = await Bookmark.find({ userId })
+      .populate({
+        path: "postId",
+        select: "content author",
+        populate: {
+          path: "author",
+          select: "username",
+        },
+      })
+      .lean()
+      .sort({ createdAt: -1 });
+
+    const result = bookmarks.filter((b) => b.postId);
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+    console.error("getBookmark error:", error);
+    return res.status(500).json({
+      message: "Internal server error"
     });
   }
 };
 
 const postAuthorize = async (posts, userId) => {
   const likes = await Like.find({userId: userId})
-
+  const bookmarks = await Bookmark.find({ userId: userId })
+  
   const userLikes = new Set(
     likes.map((like) => like.postId.toString())
   )
 
-  const postdocs = posts.map(post => ({
+  const userBookmarks = new Set(
+    bookmarks.map((bookmark) => bookmark.postId.toString())
+  )
+
+  const authorizedDocs = posts.map(post => ({
     ...post.toObject(),
     canDelete: userId.toString() === post.author._id.toString(),
     canEdit: userId.toString() === post.author._id.toString(),
-    liked: userLikes.has(post._id.toString())
+    liked: userLikes.has(post._id.toString()),
+    bookmarked: userBookmarks.has(post._id.toString())
   }));
 
-  return postdocs;
+  return authorizedDocs;
 };
 const postAuthorizeSingle = async (post, userId) =>{
   const like = await Like.findOne({userId: userId, postId: post._id});
