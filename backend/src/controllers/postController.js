@@ -48,6 +48,7 @@ const setLike = async (req, res) =>{
     }
   }
 };
+
 const deleteLike = async (req, res) => {
       try {
         const userId = req.user.id;
@@ -177,7 +178,7 @@ const getBookmark = async (req, res) => {
 const postAuthorize = async (posts, userId) => {
   const likes = await Like.find({userId: userId})
   const bookmarks = await Bookmark.find({ userId: userId })
-  
+
   const userLikes = new Set(
     likes.map((like) => like.postId.toString())
   )
@@ -274,14 +275,25 @@ const deletePost = async (req, res) => {
 };
 
 const updatePost = async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
+  const postId = req.params.id;
+  if (!mongoose.isValidObjectId(postId)) {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
 
-  const post = await Post.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  }).populate('author', 'username email');
+  const { title, content } = req.body;
+  const updates = Object.fromEntries(
+    Object.entries({ title, content}).filter(([, v]) => v !== undefined)
+  );
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: 'No valid fields to update' });
+  }
+
+  const post = await Post.findOneAndUpdate(
+    { _id: postId, author: req.user.id },
+    { $set: updates },
+    { new: true, runValidators: true }
+  ).populate('author', 'username email');
 
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
@@ -289,6 +301,7 @@ const updatePost = async (req, res) => {
 
   res.json(post);
 };
+
 const getReply = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;

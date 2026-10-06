@@ -10,7 +10,10 @@ const {
   setLike,
   deleteLike,
   replytoPost,
-  getReply
+  getReply,
+  setBookmark,
+  deleteBookmark,
+  getBookmark
 } = require('../controllers/postController');
 
 const router = express.Router();
@@ -23,8 +26,9 @@ router.delete('/:id', validateAuth, deletePost);
 router.get('/:id', validateAuth, getPostById);
 router.post('/like/:id', validateAuth, setLike);
 router.delete('/like/:id', validateAuth, deleteLike);
-// router.post('/:id/bookmark', validateAuth, setBookmark);
-// router.delete('/:id/bookmark', validateAuth, deleteBookmark);
+router.post('/:id/bookmark', validateAuth, setBookmark);
+router.delete('/:id/bookmark', validateAuth, deleteBookmark);
+router.delete('/:id/bookmark', validateAuth, getBookmark);
 //router.patch('/:id', updatePost);
 
 module.exports = router;
