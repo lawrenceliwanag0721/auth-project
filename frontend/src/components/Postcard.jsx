@@ -1,4 +1,5 @@
 'use client'
+import Image from "next/image";
 import React, { useState } from 'react'
 import { Heart, MessageCircle, Share2, Bookmark, ImagePlus } from 'lucide-react'
 
@@ -24,7 +25,7 @@ export default function PostCard({ post, isReply = false }) {
     if (months < 12) return `${months}mo ago`;
 
     const years = Math.floor(days / 365);
-    
+
     return `${years}y ago`;
   }
 
@@ -65,17 +66,32 @@ export default function PostCard({ post, isReply = false }) {
         <div className="w-9 h-9 rounded-full border border-black/30 flex items-center justify-center text-sm text-black">
           {post.author.username.charAt(0)}
         </div>
+
         <div className="flex flex-col leading-tight">
           <span className="text-lg text-black">{post.author.username}</span>
-          <span className="text-xs text-black/50">@{post.author.username} · {timeAgo(post.createdAt)}</span>
+          <span className="text-xs text-black/50">
+            @{post.author.username} · {timeAgo(post.createdAt)}
+          </span>
         </div>
       </div>
+
+      {post.title && (
+        <h2 className="text-xl font-semibold text-black/80">
+          {post.title}
+        </h2>
+      )}
 
       <p className="text-lg text-black/90">{post.content}</p>
 
       {post.image && (
-        <div className="w-full border min-h-[180px] border-black/30 rounded-lg flex items-center justify-center bg-black/[0.02]">
-          <img className="rounded-lg" src={`http://localhost:5000${post.image}`}/>
+        <div className="w-full border min-h-45 border-black/30 rounded-lg flex items-center justify-center bg-black/2">
+          <Image
+          src={`http://localhost:5000${post.image}`}
+            alt={post.title || "Post image"}
+            width={800}
+            height={600}
+            className="rounded-lg"
+          />
         </div>
       )}
 

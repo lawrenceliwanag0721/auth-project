@@ -29,6 +29,98 @@ const createPost = async (req, res) => {
     });
   }
 };
+const deletePost = async (req, res) => {
+  try {
+    const post = await Post.findOne({ _id: req.params.id });
+
+    if (!post) {
+      return res.status(404).json({
+        message: 'Post not found'
+      });
+    }
+
+    if (post.author.toString() !== req.user.id.toString()) {
+      return res.status(403).json({
+        message: 'Unauthorized deletion...'
+      });
+    }
+
+    await post.deleteOne();
+    res.status(204).send();
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
+const updatePost = async (req, res) => {
+  const postId = req.params.id;
+  if (!mongoose.isValidObjectId(postId)) {
+    return res.status(400).json({ message: 'Invalid post ID' });
+  }
+
+  const { title, content } = req.body;
+  const updates = Object.fromEntries(
+    Object.entries({ title, content}).filter(([, v]) => v !== undefined)
+  );
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: 'No valid fields to update' });
+  }
+
+  const post = await Post.findOneAndUpdate(
+    { _id: postId, author: req.user.id },
+    { $set: updates },
+    { new: true, runValidators: true }
+  ).populate('author', 'username email');
+
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+
+  res.json(post);
+};
+const getPosts = async (req, res) => {
+  const userId = req.user.id;
+
+  // const cachedPosts = await redis.get("posts");
+
+  // if (cachedPosts) {
+  //   const authorizedPost = await postAuthorize(cachedPosts, userId);
+  //   return res.json(JSON.parse(authorizedPost));
+  // }
+
+  const posts = await Post.find()
+    .populate('author', 'username')
+    .sort({ createdAt: -1 });
+
+  // await redis.set(
+  //     "posts",
+  //     JSON.stringify(posts),
+  //     { EX: 60 }
+  // );
+
+  const authorizedPost = await postAuthorize(posts, userId);
+
+  res.json(authorizedPost);
+};
+const getPostById = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid post ID' });
+  }
+  const userId = req.user.id;
+  const post = await Post.findById(req.params.id).populate('author', 'username').lean();
+
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+  const authorizedPost = await postAuthorizeSingle(post, userId);
+
+  res.json(authorizedPost);
+};
 
 const setLike = async (req, res) =>{
   const id = req.user.id;
@@ -48,7 +140,6 @@ const setLike = async (req, res) =>{
     }
   }
 };
-
 const deleteLike = async (req, res) => {
       try {
         const userId = req.user.id;
@@ -146,7 +237,6 @@ const deleteBookmark = async (req, res) => {
     });
   }
 }
-
 const getBookmark = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -205,103 +295,6 @@ const postAuthorizeSingle = async (post, userId) =>{
   return post;
 };
 
-
-const getPosts = async (req, res) => {
-  const userId = req.user.id;
-
-  // const cachedPosts = await redis.get("posts");
-
-  // if (cachedPosts) {
-  //   const authorizedPost = await postAuthorize(cachedPosts, userId);
-  //   return res.json(JSON.parse(authorizedPost));
-  // }
-
-  const posts = await Post.find()
-    .populate('author', 'username')
-    .sort({ createdAt: -1 });
-
-  // await redis.set(
-  //     "posts",
-  //     JSON.stringify(posts),
-  //     { EX: 60 }
-  // );
-
-  const authorizedPost = await postAuthorize(posts, userId);
-
-  res.json(authorizedPost);
-};
-
-const getPostById = async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid post ID' });
-  }
-  const userId = req.user.id;
-  const post = await Post.findById(req.params.id).populate('author', 'username').lean();
-
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-  const authorizedPost = await postAuthorizeSingle(post, userId);
-
-  res.json(authorizedPost);
-};
-
-const deletePost = async (req, res) => {
-  try {
-    const post = await Post.findOne({ _id: req.params.id });
-
-    if (!post) {
-      return res.status(404).json({
-        message: 'Post not found'
-      });
-    }
-
-    if (post.author.toString() !== req.user.id.toString()) {
-      return res.status(403).json({
-        message: 'Unauthorized deletion...'
-      });
-    }
-
-    await post.deleteOne();
-    res.status(204).send();
-
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: 'Server error'
-    });
-  }
-};
-
-const updatePost = async (req, res) => {
-  const postId = req.params.id;
-  if (!mongoose.isValidObjectId(postId)) {
-    return res.status(400).json({ message: 'Invalid post ID' });
-  }
-
-  const { title, content } = req.body;
-  const updates = Object.fromEntries(
-    Object.entries({ title, content}).filter(([, v]) => v !== undefined)
-  );
-
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ message: 'No valid fields to update' });
-  }
-
-  const post = await Post.findOneAndUpdate(
-    { _id: postId, author: req.user.id },
-    { $set: updates },
-    { new: true, runValidators: true }
-  ).populate('author', 'username email');
-
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-
-  res.json(post);
-};
-
 const getReply = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;
@@ -346,4 +339,7 @@ module.exports = {
   deleteLike,
   replytoPost,
   getReply,
+  setBookmark,
+  deleteBookmark,
+  getBookmark,
 };
