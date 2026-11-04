@@ -14,8 +14,7 @@ const createPost = async (req, res) => {
       title,
       content,
       author: id,
-      image: req.file ?
-        `/uploads/posts/${req.file.filename}` : null
+      image: req.file ? `/uploads/posts/${req.file.filename}` : null
     });
 
     return res.status(201).json(post);
@@ -26,96 +25,6 @@ const createPost = async (req, res) => {
       message: "Failed to create post",
     });
   }
-};
-const deletePost = async (req, res) => {
-  try {
-    const post = await postRepository.findById(req.params.id);
-
-    if (!post) {
-      return res.status(404).json({
-        message: 'Post not found'
-      });
-    }
-
-    if (post.author.toString() !== req.user.id.toString()) {
-      return res.status(403).json({
-        message: 'Unauthorized deletion...'
-      });
-    }
-
-    await postRepository.deleteById(post._id);
-    res.status(204).send();
-
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: 'Server error'
-    });
-  }
-};
-const updatePost = async (req, res) => {
-  const postId = req.params.id;
-  if (!mongoose.isValidObjectId(postId)) {
-    return res.status(400).json({ message: 'Invalid post ID' });
-  }
-
-  const { title, content } = req.body;
-  const updates = Object.fromEntries(
-    Object.entries({ title, content}).filter(([, v]) => v !== undefined)
-  );
-
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ message: 'No valid fields to update' });
-  }
-
-  const post = await postRepository.findByIdAndAuthorAndUpdate(
-    postId,
-    req.user.id,
-    updates
-  );
-
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-
-  res.json(post);
-};
-const getPosts = async (req, res) => {
-  const userId = req.user.id;
-
-  // const cachedPosts = await redis.get("posts");
-
-  // if (cachedPosts) {
-  //   const authorizedPost = await postAuthorize(cachedPosts, userId);
-  //   return res.json(JSON.parse(authorizedPost));
-  // }
-
-  const posts = await postRepository.findAll();
-
-  // await redis.set(
-  //     "posts",
-  //     JSON.stringify(posts),
-  //     { EX: 60 }
-  // );
-
-  const authorizedPost = await postAuthorize(posts, userId);
-
-  res.json(authorizedPost);
-};
-const getPostById = async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid post ID' });
-  }
-  const userId = req.user.id;
-  const post = await postRepository.findByIdWithAuthor(req.params.id);
-
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-  const authorizedPost = await postAuthorizeSingle(post, userId);
-
-  res.json(authorizedPost);
 };
 
 const setLike = async (req, res) =>{
@@ -133,15 +42,13 @@ const setLike = async (req, res) =>{
     }
   }
 };
+
 const deleteLike = async (req, res) => {
       try {
         const userId = req.user.id;
         const postId = req.params.id;
 
-        const deletedLike = await likeRepository.deleteByUserAndPost(
-            userId,
-            postId
-        );
+        const deletedLike = await likeRepository.deleteByUserAndPost(userId, postId);
 
         if (!deletedLike) {
             return res.status(404).json({
@@ -195,6 +102,7 @@ const setBookmark = async (req, res) => {
     });
   }
 };
+
 const deleteBookmark = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;
@@ -206,10 +114,7 @@ const deleteBookmark = async (req, res) => {
   }
 
   try {
-    const deletedBookmark = await bookmarkRepository.deleteByUserAndPost(
-        userId,
-        postId
-    );
+    const deletedBookmark = await bookmarkRepository.deleteByUserAndPost(userId, postId);
 
     if (!deletedBookmark) {
         return res.status(404).json({
@@ -217,7 +122,7 @@ const deleteBookmark = async (req, res) => {
         });
     }
 
-    return res.status(204).json();
+    return res.status(200).json(deletedBookmark);
 
   }catch(error) {
     return res.status(500).json({
@@ -225,45 +130,35 @@ const deleteBookmark = async (req, res) => {
     });
   }
 }
+
 const getBookmark = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const bookmarks = await bookmarkRepository.findByUserWithPosts(req.user.id);
 
-    const bookmarks = await bookmarkRepository.findByUserWithPosts(userId);
-
-    const result = bookmarks.filter((b) => b.postId);
-
-    return res.status(200).json(result);
-
+    return res.status(200).json(bookmarks.filter((bookmark) => bookmark.postId));
   } catch (error) {
-    console.error("getBookmark error:", error);
+    console.error('getBookmark error:', error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: 'Internal server error'
     });
   }
 };
 
 const postAuthorize = async (posts, userId) => {
-  const likes = await likeRepository.findByUser(userId)
-  const bookmarks = await bookmarkRepository.findByUser(userId)
+  const likes = await likeRepository.findByUser(userId);
 
   const userLikes = new Set(
     likes.map((like) => like.postId.toString())
   )
 
-  const userBookmarks = new Set(
-    bookmarks.map((bookmark) => bookmark.postId.toString())
-  )
-
-  const authorizedDocs = posts.map(post => ({
+  const postdocs = posts.map(post => ({
     ...post.toObject(),
     canDelete: userId.toString() === post.author._id.toString(),
     canEdit: userId.toString() === post.author._id.toString(),
-    liked: userLikes.has(post._id.toString()),
-    bookmarked: userBookmarks.has(post._id.toString())
+    liked: userLikes.has(post._id.toString())
   }));
 
-  return authorizedDocs;
+  return postdocs;
 };
 const postAuthorizeSingle = async (post, userId) =>{
   const like = await likeRepository.findByUserAndPost(userId, post._id);
@@ -273,6 +168,101 @@ const postAuthorizeSingle = async (post, userId) =>{
   return post;
 };
 
+
+const getPosts = async (req, res) => {
+  const userId = req.user.id;
+
+  // const cachedPosts = await redis.get("posts");
+
+  // if (cachedPosts) {
+  //   const authorizedPost = await postAuthorize(cachedPosts, userId);
+  //   return res.json(JSON.parse(authorizedPost));
+  // }
+
+  const posts = await postRepository.findAll();
+
+  // await redis.set(
+  //     "posts",
+  //     JSON.stringify(posts),
+  //     { EX: 60 }
+  // );
+
+  const authorizedPost = await postAuthorize(posts, userId);
+
+  res.json(authorizedPost);
+};
+
+const getPostById = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid post ID' });
+  }
+  const userId = req.user.id;
+  const post = await postRepository.findByIdWithAuthor(req.params.id);
+
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+  const authorizedPost = await postAuthorizeSingle(post, userId);
+
+  res.json(authorizedPost);
+};
+
+const deletePost = async (req, res) => {
+  try {
+    const post = await postRepository.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({
+        message: 'Post not found'
+      });
+    }
+
+    if (post.author.toString() !== req.user.id.toString()) {
+      return res.status(403).json({
+        message: 'Unauthorized deletion...'
+      });
+    }
+
+    await postRepository.deleteById(post._id);
+    res.status(204).send();
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Server error'
+    });
+  }
+};
+
+const updatePost = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid post ID' });
+  }
+
+  const updates = Object.fromEntries(
+    Object.entries({
+      title: req.body.title,
+      content: req.body.content
+    }).filter(([, value]) => value !== undefined)
+  );
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: 'No valid fields to update' });
+  }
+
+  const post = await postRepository.findByIdAndAuthorAndUpdate(
+    req.params.id,
+    req.user.id,
+    updates
+  );
+
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
+  }
+
+  res.json(post);
+};
 const getReply = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;

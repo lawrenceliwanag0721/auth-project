@@ -26,9 +26,9 @@ router.delete('/:id', validateAuth, deletePost);
 router.get('/:id', validateAuth, getPostById);
 router.post('/like/:id', validateAuth, setLike);
 router.delete('/like/:id', validateAuth, deleteLike);
+router.get('/bookmark', validateAuth, getBookmark);
 router.post('/:id/bookmark', validateAuth, setBookmark);
 router.delete('/:id/bookmark', validateAuth, deleteBookmark);
-router.delete('/:id/bookmark', validateAuth, getBookmark);
 //router.patch('/:id', updatePost);
 
 module.exports = router;
