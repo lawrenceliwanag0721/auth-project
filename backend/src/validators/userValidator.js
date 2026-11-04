@@ -1,181 +1,181 @@
 const { z } = require('zod');
 
-const usernameSchema = z.string({
-  error: (issue) => issue.input === undefined || issue.input === null
-    ? 'Username is required.'
-    : 'Username must be a string.'
-}).trim().superRefine((username, context) => {
+const requiredString = (label) =>
+  z.string({
+    error: (issue) => issue.input === undefined || issue.input === null
+      ? `${label} is required.`
+      : `${label} must be a string.`
+  });
+
+// ---------- Fields ----------
+
+const usernameSchema = requiredString('Username').trim().superRefine((username, ctx) => {
   if (!username) {
-    context.addIssue({ code: 'custom', message: 'Username is required.' });
-  } else {
-    if (username.length < 3) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Username must be at least 3 characters.'
-      });
-    }
-    if (username.length > 30) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Username must be at most 30 characters.'
-      });
-    }
+    ctx.addIssue({ code: 'custom', message: 'Username is required.' });
+    return;
+  }
+  if (username.length < 3) {
+    ctx.addIssue({ code: 'custom', message: 'Username must be at least 3 characters.' });
+  }
+  if (username.length > 30) {
+    ctx.addIssue({ code: 'custom', message: 'Username must be at most 30 characters.' });
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Username may only contain letters, numbers and underscores.'
+    });
   }
 });
 
-const emailSchema = z.string({
-  error: (issue) => issue.input === undefined || issue.input === null
-    ? 'Email is required.'
-    : 'Email must be a string.'
-}).trim().superRefine((email, context) => {
+const emailSchema = requiredString('Email').trim().toLowerCase().superRefine((email, ctx) => {
   if (!email) {
-    context.addIssue({ code: 'custom', message: 'Email is required.' });
-  } else if (!z.email().safeParse(email).success) {
-    context.addIssue({
+    ctx.addIssue({ code: 'custom', message: 'Email is required.' });
+    return;
+  }
+  if (email.length > 254) {
+    ctx.addIssue({ code: 'custom', message: 'Email must be at most 254 characters.' });
+  }
+  if (!z.email().safeParse(email).success) {
+    ctx.addIssue({ code: 'custom', message: 'Email must be a valid email address.' });
+  }
+});
+
+// bcrypt ignores bytes past 72; use 128 if you switch to argon2
+const PASSWORD_MAX_BYTES = 72;
+
+const passwordSchema = requiredString('Password').superRefine((password, ctx) => {
+  if (!password) {
+    ctx.addIssue({ code: 'custom', message: 'Password is required.' });
+    return;
+  }
+  if (password.length < 8) {
+    ctx.addIssue({ code: 'custom', message: 'Password must be at least 8 characters.' });
+  }
+  if (Buffer.byteLength(password, 'utf8') > PASSWORD_MAX_BYTES) {
+    ctx.addIssue({
       code: 'custom',
-      message: 'Email must be a valid email address.'
+      message: `Password must be at most ${PASSWORD_MAX_BYTES} bytes.`
     });
   }
 });
 
-const passwordSchema = z.string({
-  error: (issue) => issue.input === undefined || issue.input === null
-    ? 'Password is required.'
-    : 'Password must be a string.'
-}).superRefine((password, context) => {
-  if (!password) {
-    context.addIssue({ code: 'custom', message: 'Password is required.' });
-  } else if (password.length < 8) {
-    context.addIssue({
-      code: 'custom',
-      message: 'Password must be at least 8 characters.'
-    });
-  }
-});
+// Sign-in: don't enforce the signup policy, so policy changes never lock out old accounts
+const signInUsernameSchema = requiredString('Username').trim()
+  .min(1, 'Username is required.')
+  .max(30, 'Invalid credentials.');
+
+const signInPasswordSchema = requiredString('Password')
+  .min(1, 'Password is required.')
+  .max(128, 'Invalid credentials.');
 
 const roleSchema = z.enum(['user', 'admin'], {
   error: 'Role must be one of: user, admin.'
 });
 
-const avatarSchema = z.string({
-  error: 'Avatar must be a string (URL) or null.'
-}).nullable();
+const avatarSchema = z
+  .url({
+    protocol: /^https?$/,
+    error: 'Avatar must be a valid http(s) URL or null.'
+  })
+  .max(2048, 'Avatar URL must be at most 2048 characters.')
+  .nullable();
 
-const signInSchema = z.object({
-  username: usernameSchema,
-  password: passwordSchema
+// ---------- Schemas (strict: unknown keys are rejected) ----------
+
+const signInSchema = z.strictObject({
+  username: signInUsernameSchema,
+  password: signInPasswordSchema
 });
 
-const signUpSchema = z.object({
+const signUpSchema = z.strictObject({
   username: usernameSchema,
   email: emailSchema,
   password: passwordSchema,
-  confirmPassword: z.string({
-    error: 'Password mismatched'
-  })
-}).catchall(z.unknown()).superRefine((data, context) => {
+  confirmPassword: z.string({ error: 'Password mismatched' })
+}).superRefine((data, ctx) => {
   if (data.password !== data.confirmPassword) {
-    context.addIssue({
+    ctx.addIssue({
       code: 'custom',
       path: ['confirmPassword'],
       message: 'Password mismatched'
     });
   }
-
-  if (Object.keys(data).some((key) => ![
-    'username',
-    'email',
-    'password',
-    'confirmPassword'
-  ].includes(key))) {
-    context.addIssue({
-      code: 'custom',
-      message: 'invalid fields found'
-    });
-  }
 });
 
-const userSchema = z.object({
+const userSchema = z.strictObject({
   username: usernameSchema,
   email: emailSchema,
   password: passwordSchema
 });
 
+// Self-service update: no role
 const userUpdateSchema = z.strictObject({
   username: usernameSchema.optional(),
   email: emailSchema.optional(),
   password: passwordSchema.optional(),
-  role: roleSchema.optional(),
   avatar: avatarSchema.optional()
 });
 
+// Admin-only update: adds role
+const adminUpdateSchema = userUpdateSchema.extend({
+  role: roleSchema.optional()
+});
+
+// ---------- Core validate ----------
+
+// Always returns { valid, errors, data }.
+// errors: array of messages when arrayErrors is true, otherwise { field: [messages] }.
 function validate(schema, data, arrayErrors = false) {
   const result = schema.safeParse(data);
+
   if (result.success) {
-    return { valid: true, errors: arrayErrors ? [] : {} };
+    return { valid: true, errors: arrayErrors ? [] : {}, data: result.data };
   }
 
   if (arrayErrors) {
-    return {
-      valid: false,
-      errors: result.error.issues.map((issue) => issue.message)
-    };
+    return { valid: false, errors: result.error.issues.map((i) => i.message), data: null };
   }
 
   const errors = {};
   for (const issue of result.error.issues) {
     const field = issue.path[0] || 'body';
-    if (!errors[field]) errors[field] = [];
-    errors[field].push(issue.message);
+    (errors[field] ||= []).push(issue.message);
   }
-  return { valid: false, errors };
+  return { valid: false, errors, data: null };
 }
 
-function validateUser(data = {}) {
-  return validate(userSchema, data);
+const validateUser = (data = {}) => validate(userSchema, data);
+const validateUserUpdate = (data = {}) => validate(userUpdateSchema, data);
+const validateAdminUpdate = (data = {}) => validate(adminUpdateSchema, data);
+const validateSignIn = (data = {}) => validate(signInSchema, data, true);
+const validateSignUp = (data = {}) => validate(signUpSchema, data, true);
+
+// ---------- Middleware ----------
+
+// Replaces req.body with the parsed output (trimmed, lowercased, unknown keys gone)
+function makeMiddleware(validator, transform = (d) => d) {
+  return (req, res, next) => {
+    const { valid, errors, data } = validator(req.body);
+    if (!valid) return res.status(400).json({ errors });
+    req.body = transform(data);
+    next();
+  };
 }
 
-function validateUserUpdate(data = {}) {
-  return validate(userUpdateSchema, data);
-}
-
-function validateSignIn(data = {}) {
-  return validate(signInSchema, data, true);
-}
-
-function validateSignUp(data = {}) {
-  return validate(signUpSchema, data, true);
-}
-
-function validateUserMiddleware(req, res, next) {
-  const { valid, errors } = validateUser(req.body);
-  if (!valid) return res.status(400).json({ errors });
-  next();
-}
-
-function validateUserUpdateMiddleware(req, res, next) {
-  const { valid, errors } = validateUserUpdate(req.body);
-  if (!valid) return res.status(400).json({ errors });
-  next();
-}
-
-function validateSignInMiddleware(req, res, next) {
-  const { valid, errors } = validateSignIn(req.body);
-  if (!valid) return res.status(400).json({ valid, errors });
-  next();
-}
-
-function validateSignUpMiddleware(req, res, next) {
-  const { valid, errors } = validateSignUp(req.body);
-  if (!valid) return res.status(400).json({ errors });
-  next();
-}
+const validateUserMiddleware = makeMiddleware(validateUser);
+const validateUserUpdateMiddleware = makeMiddleware(validateUserUpdate);
+const validateAdminUpdateMiddleware = makeMiddleware(validateAdminUpdate);
+const validateSignInMiddleware = makeMiddleware(validateSignIn);
+const validateSignUpMiddleware = makeMiddleware(validateSignUp, ({ confirmPassword, ...rest }) => rest);
 
 module.exports = {
   validateSignUpMiddleware,
   validateSignInMiddleware,
   validateUser,
   validateUserUpdate,
+  validateAdminUpdate,
   validateUserMiddleware,
-  validateUserUpdateMiddleware
+  validateUserUpdateMiddleware,
+  validateAdminUpdateMiddleware
 };
