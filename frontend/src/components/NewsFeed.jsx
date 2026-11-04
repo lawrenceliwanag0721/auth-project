@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import Tabs from './Tabs'
 import PostFeedSection from './PostFeedSection'
 import FollowingFeedSection from './FollowingFeedSection'
+import TrendingList from './TrendingList'
 
 const USER = {
   name: "Aruji Dono",
@@ -39,8 +40,8 @@ export default function NewsFeed({ initialProps }) {
         </div>
       </section>
 
-      <aside className="hidden xl:flex justify-end w-full max-w-sm p-4">
-        {/* filler field */}
+      <aside className="hidden xl:flex w-full max-w-sm p-4">
+        <TrendingList />
       </aside>
     </main>
   )

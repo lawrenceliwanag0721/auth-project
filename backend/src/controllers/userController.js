@@ -121,6 +121,12 @@ const updateUser = async (req, res) => {
     });
   }
 
+  if (!new mongoose.Types.ObjectId(req.params.id).equals(req.user.id)) {
+    return res.status(403).json({
+      message: 'You can only update your own account'
+    });
+  }
+
   const updates = { ...req.body };
   if (updates.password) {
     updates.password = await 

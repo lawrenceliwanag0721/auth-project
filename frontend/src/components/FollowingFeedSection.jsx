@@ -1,8 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
-
 import PostCard from './Postcard'
 const mockPosts = [
   {
@@ -79,12 +77,7 @@ export default function FollowingFeedSection({ posts = mockPosts }) {
 
       <div className="flex flex-col gap-4">
         {postList.map((post) => (
-          <Link
-            key={post._id}
-            href={`/status/${post._id}`}
-          >
-            <PostCard post={post} />
-          </Link>
+          <PostCard key={post._id} post={post} href={`/status/${post._id}`} />
         ))}
       </div>
 

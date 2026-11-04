@@ -21,7 +21,7 @@ router.get('/:id', getUserById);
 router.post('/', validateAuth, isTokenExists);
 router.post('/signup', validateSignUpMiddleware, createUser);
 router.post('/signin', validateSignInMiddleware, signInUser);
-router.put('/:id', validateUserUpdateMiddleware, updateUser);
+router.put('/:id', validateAuth, validateUserUpdateMiddleware, updateUser);
 //router.delete('/:id', deleteUser);
 
 module.exports = router;

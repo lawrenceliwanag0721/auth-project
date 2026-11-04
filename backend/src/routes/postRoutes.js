@@ -1,6 +1,7 @@
 const express = require('express');
 const validateAuth = require('../validators/authValidator');
 const upload = require('../middleware/upload')
+const { validatePostUpdateMiddleware } = require('../validators/postValidator');
 const {
   getPosts,
   getPostById,
@@ -22,13 +23,13 @@ router.get('/', validateAuth, getPosts);
 router.post('/', validateAuth, upload.single('image'), createPost);
 router.get('/:id/reply', validateAuth, getReply);
 router.post('/:id/reply', validateAuth, replytoPost);
-router.delete('/:id', validateAuth, deletePost);
+router.get('/bookmark', validateAuth, getBookmark);
+router.patch('/:id', validateAuth, validatePostUpdateMiddleware, updatePost);
 router.get('/:id', validateAuth, getPostById);
 router.post('/like/:id', validateAuth, setLike);
 router.delete('/like/:id', validateAuth, deleteLike);
-router.get('/bookmark', validateAuth, getBookmark);
 router.post('/:id/bookmark', validateAuth, setBookmark);
 router.delete('/:id/bookmark', validateAuth, deleteBookmark);
-//router.patch('/:id', updatePost);
+router.delete('/:id', validateAuth, deletePost);
 
 module.exports = router;

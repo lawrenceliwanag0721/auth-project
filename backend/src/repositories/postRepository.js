@@ -20,7 +20,7 @@ const findByIdAndAuthorAndUpdate = (postId, authorId, updates) =>
     { _id: postId, author: authorId },
     { $set: updates },
     { new: true, runValidators: true }
-  ).populate('author', 'username email');
+  ).populate('author', 'username');
 
 const deleteById = (postId) => Post.findByIdAndDelete(postId);
 

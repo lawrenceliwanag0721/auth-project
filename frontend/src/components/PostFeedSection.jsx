@@ -1,6 +1,5 @@
 'use client'
 import React, { useState } from 'react'
-import Link from 'next/link'
 import PostCard from './Postcard'
 import Composer from './Composer'
 
@@ -8,7 +7,17 @@ export default function PostFeedSection({ posts }) {
   const [postList, setPostList] = useState(posts)
 
   const addPostToFeed = (newPost) => {
-    setPostList([newPost, ...postList])
+    setPostList((posts) => [newPost, ...posts])
+  }
+
+  const updatePostInFeed = (updatedPost) => {
+    setPostList((posts) => posts.map((post) => (
+      post._id === updatedPost._id ? { ...post, ...updatedPost } : post
+    )))
+  }
+
+  const removePostFromFeed = (postId) => {
+    setPostList((posts) => posts.filter((post) => post._id !== postId))
   }
 
   return (
@@ -18,12 +27,13 @@ export default function PostFeedSection({ posts }) {
       />
       <div className="flex flex-col gap-4">
         {postList.map((post) => (
-          <Link
+          <PostCard
             key={post._id}
+            post={post}
             href={`/status/${post._id}`}
-          >
-            <PostCard post={post} />
-          </Link>
+            onUpdate={updatePostInFeed}
+            onDelete={removePostFromFeed}
+          />
         ))}
       </div>
     </div>

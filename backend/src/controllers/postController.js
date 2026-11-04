@@ -208,6 +208,12 @@ const getPostById = async (req, res) => {
 };
 
 const deletePost = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({
+      message: 'Invalid post ID'
+    });
+  }
+
   try {
     const post = await postRepository.findById(req.params.id);
 
@@ -240,28 +246,22 @@ const updatePost = async (req, res) => {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
 
-  const updates = Object.fromEntries(
-    Object.entries({
-      title: req.body.title,
-      content: req.body.content
-    }).filter(([, value]) => value !== undefined)
-  );
+  try {
+    const post = await postRepository.findByIdAndAuthorAndUpdate(
+      req.params.id,
+      req.user.id,
+      req.body
+    );
 
-  if (Object.keys(updates).length === 0) {
-    return res.status(400).json({ message: 'No valid fields to update' });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    return res.json(post);
+  } catch (error) {
+    console.error('updatePost error:', error);
+    return res.status(500).json({ message: 'Failed to update post' });
   }
-
-  const post = await postRepository.findByIdAndAuthorAndUpdate(
-    req.params.id,
-    req.user.id,
-    updates
-  );
-
-  if (!post) {
-    return res.status(404).json({ message: 'Post not found' });
-  }
-
-  res.json(post);
 };
 const getReply = async (req, res) => {
   const userId = req.user.id;
