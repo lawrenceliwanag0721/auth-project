@@ -22,8 +22,7 @@ export default function PostCard({ post, isReply = false, href, onUpdate, onDele
   const canManage = !isReply && (currentPost.canEdit || currentPost.canDelete)
 
   useEffect(() => {
-    const timer = setTimeout(() => setNow(Date.now()), 0)
-    return () => clearTimeout(timer)
+    setNow(Date.now())
   }, [])
 
   const stopNavigation = (event) => {
@@ -125,10 +124,6 @@ export default function PostCard({ post, isReply = false, href, onUpdate, onDele
 
   if (isDeleted) return null
 
-  const imageSrc = currentPost.image?.startsWith('/')
-    ? `http://localhost:5000${currentPost.image}`
-    : null
-
   const postBody = (
     <>
       {currentPost.title && (
@@ -139,10 +134,10 @@ export default function PostCard({ post, isReply = false, href, onUpdate, onDele
 
       <p className="text-lg text-black/90">{currentPost.content}</p>
 
-      {imageSrc && (
+      {currentPost.image && (
         <div className="w-full border min-h-45 border-black/30 rounded-lg flex items-center justify-center bg-black/2">
           <Image
-            src={imageSrc}
+            src={`http://localhost:5000${currentPost.image}`}
             alt={currentPost.title || "Post image"}
             width={800}
             height={600}
