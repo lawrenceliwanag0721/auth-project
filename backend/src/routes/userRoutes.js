@@ -12,9 +12,6 @@ const {
 const {
   validateSignUpMiddleware,
   validateSignInMiddleware,
-  validateUser,
-  validateUserUpdate,
-  validateUserMiddleware,
   validateUserUpdateMiddleware,
 } = require('../validators/userValidator');
 const router = express.Router();
@@ -24,7 +21,7 @@ router.get('/:id', getUserById);
 router.post('/', validateAuth, isTokenExists);
 router.post('/signup', validateSignUpMiddleware, createUser);
 router.post('/signin', validateSignInMiddleware, signInUser);
-router.put('/:id', updateUser);
+router.put('/:id', validateUserUpdateMiddleware, updateUser);
 //router.delete('/:id', deleteUser);
 
 module.exports = router;
