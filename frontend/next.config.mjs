@@ -8,7 +8,6 @@ const nextConfig = {
   reactCompiler: true,
 
   images: {
-    // Allows Next.js SSR image optimization to fetch from localhost/private IPs
     dangerouslyAllowSVG: true,
     dangerouslyAllowLocalIP: true,
     remotePatterns: [

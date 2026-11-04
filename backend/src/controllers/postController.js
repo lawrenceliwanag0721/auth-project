@@ -1,24 +1,22 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Post = require('../models/Post');
-const Like = require('../models/Like');
-const Reply = require('../models/Reply');
-const Bookmark = require('../models/Bookmark');
+const postRepository = require('../repositories/postRepository');
+const likeRepository = require('../repositories/likeRepository');
+const replyRepository = require('../repositories/replyRepository');
+const bookmarkRepository = require('../repositories/bookmarkRepository');
 
 const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
     const id = req.user.id
 
-    const post = await Post.create({
+    const post = await postRepository.create({
       title,
       content,
       author: id,
       image: req.file ?
         `/uploads/posts/${req.file.filename}` : null
     });
-
-    await post.populate('author', 'username');
 
     return res.status(201).json(post);
 
@@ -31,7 +29,7 @@ const createPost = async (req, res) => {
 };
 const deletePost = async (req, res) => {
   try {
-    const post = await Post.findOne({ _id: req.params.id });
+    const post = await postRepository.findById(req.params.id);
 
     if (!post) {
       return res.status(404).json({
@@ -45,7 +43,7 @@ const deletePost = async (req, res) => {
       });
     }
 
-    await post.deleteOne();
+    await postRepository.deleteById(post._id);
     res.status(204).send();
 
   } catch (error) {
@@ -71,11 +69,11 @@ const updatePost = async (req, res) => {
     return res.status(400).json({ message: 'No valid fields to update' });
   }
 
-  const post = await Post.findOneAndUpdate(
-    { _id: postId, author: req.user.id },
-    { $set: updates },
-    { new: true, runValidators: true }
-  ).populate('author', 'username email');
+  const post = await postRepository.findByIdAndAuthorAndUpdate(
+    postId,
+    req.user.id,
+    updates
+  );
 
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
@@ -93,9 +91,7 @@ const getPosts = async (req, res) => {
   //   return res.json(JSON.parse(authorizedPost));
   // }
 
-  const posts = await Post.find()
-    .populate('author', 'username')
-    .sort({ createdAt: -1 });
+  const posts = await postRepository.findAll();
 
   // await redis.set(
   //     "posts",
@@ -112,7 +108,7 @@ const getPostById = async (req, res) => {
     return res.status(400).json({ message: 'Invalid post ID' });
   }
   const userId = req.user.id;
-  const post = await Post.findById(req.params.id).populate('author', 'username').lean();
+  const post = await postRepository.findByIdWithAuthor(req.params.id);
 
   if (!post) {
     return res.status(404).json({ message: 'Post not found' });
@@ -127,10 +123,7 @@ const setLike = async (req, res) =>{
   const postId = req.params.id;
 
   try{
-    await Like.create({
-      userId: id,
-      postId: postId
-    });
+    await likeRepository.create(id, postId);
 
     return res.sendStatus(204);
 
@@ -145,10 +138,10 @@ const deleteLike = async (req, res) => {
         const userId = req.user.id;
         const postId = req.params.id;
 
-        const deletedLike = await Like.findOneAndDelete({
-            userId: userId,
-            postId: postId
-        });
+        const deletedLike = await likeRepository.deleteByUserAndPost(
+            userId,
+            postId
+        );
 
         if (!deletedLike) {
             return res.status(404).json({
@@ -178,9 +171,7 @@ const setBookmark = async (req, res) => {
   }
 
   try {
-    const postExists = await Post.exists({
-      _id: postId
-    });
+    const postExists = await postRepository.exists(postId);
 
     if (!postExists) {
       return res.status(404).json({
@@ -188,10 +179,7 @@ const setBookmark = async (req, res) => {
       });
     }
 
-    const bookmark = await Bookmark.create({
-        userId,
-        postId
-    });
+    const bookmark = await bookmarkRepository.create(userId, postId);
 
     return res.status(201).json(bookmark);
 
@@ -218,10 +206,10 @@ const deleteBookmark = async (req, res) => {
   }
 
   try {
-    const deletedBookmark = await Bookmark.findOneAndDelete({
-        userId: userId,
-        postId: postId
-    });
+    const deletedBookmark = await bookmarkRepository.deleteByUserAndPost(
+        userId,
+        postId
+    );
 
     if (!deletedBookmark) {
         return res.status(404).json({
@@ -241,17 +229,7 @@ const getBookmark = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const bookmarks = await Bookmark.find({ userId })
-      .populate({
-        path: "postId",
-        select: "content author",
-        populate: {
-          path: "author",
-          select: "username",
-        },
-      })
-      .lean()
-      .sort({ createdAt: -1 });
+    const bookmarks = await bookmarkRepository.findByUserWithPosts(userId);
 
     const result = bookmarks.filter((b) => b.postId);
 
@@ -266,8 +244,8 @@ const getBookmark = async (req, res) => {
 };
 
 const postAuthorize = async (posts, userId) => {
-  const likes = await Like.find({userId: userId})
-  const bookmarks = await Bookmark.find({ userId: userId })
+  const likes = await likeRepository.findByUser(userId)
+  const bookmarks = await bookmarkRepository.findByUser(userId)
 
   const userLikes = new Set(
     likes.map((like) => like.postId.toString())
@@ -288,7 +266,7 @@ const postAuthorize = async (posts, userId) => {
   return authorizedDocs;
 };
 const postAuthorizeSingle = async (post, userId) =>{
-  const like = await Like.findOne({userId: userId, postId: post._id});
+  const like = await likeRepository.findByUserAndPost(userId, post._id);
   post.canDelete = userId.toString() === post.author._id.toString();
   post.canEdit = userId.toString() === post.author._id.toString();
   post.liked = !!like;
@@ -299,9 +277,7 @@ const getReply = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;
 
-  const replies = await Reply.find({parentPost: postId})
-    .populate('author', 'username')
-    .sort({ createdAt: -1 });
+  const replies = await replyRepository.findByPost(postId);
 
   const authorizedPost = await postAuthorize(replies, userId);
 
@@ -312,12 +288,11 @@ const replytoPost = async (req, res) => {
   const userId = req.user.id
   const postId = req.params.id;
   try {
-    const reply = await Reply.create({
+    const reply = await replyRepository.create({
       content: content,
       author: userId,
       parentPost: postId,
     });
-    await reply.populate('author', 'username');
 
     return res.status(201).json(reply);
   } catch (error) {
