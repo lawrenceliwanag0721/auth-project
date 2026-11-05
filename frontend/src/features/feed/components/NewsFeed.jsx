@@ -1,0 +1,48 @@
+'use client'
+
+import React, { useState } from 'react'
+
+import Sidebar from '@/features/profile/components/Sidebar'
+import Tabs from './Tabs'
+import PostFeedSection from './PostFeedSection'
+import FollowingFeedSection from './FollowingFeedSection'
+import TrendingList from './TrendingList'
+
+const USER = {
+  name: "Aruji Dono",
+  handle: "@arujidono",
+  bio: "Building full-stack apps. React / Node / MongoDB.",
+  stats: [
+    { label: "Posts", value: 12 },
+    { label: "Followers", value: 340 },
+    { label: "Following", value: 128 },
+  ],
+}
+
+export default function NewsFeed({ initialPosts }) {
+
+  const [active, setActive] = useState("For You")
+
+  return (
+    <main className="bg-white rounded-lg flex flex-row w-full justify-center gap-6">
+      <aside className="hidden xl:flex justify-end w-full max-w-sm p-4 h-auto">
+        <Sidebar user={USER} />
+      </aside>
+
+      <section className="w-full max-w-2xl p-4">
+        <div className="flex flex-col gap-4">
+          <Tabs
+            active={active}
+            setActive={setActive}
+          />
+          {active === "For You" && <PostFeedSection posts={initialPosts} />}
+          {active === "Following" && <FollowingFeedSection/>}
+        </div>
+      </section>
+
+      <aside className="hidden xl:flex w-full max-w-sm p-4">
+        <TrendingList />
+      </aside>
+    </main>
+  )
+}

@@ -1,0 +1,6 @@
+node_modules/
+.next/
+backend/src/uploads/posts/
+**/.env
+**/.env.*
+!**/.env.example
