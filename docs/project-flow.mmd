@@ -1,0 +1,75 @@
+flowchart TD
+  Browser["Browser"]
+
+  subgraph Frontend["Next.js frontend"]
+    Login["/ login and registration page"]
+    LoginForm["LoginForm / RegisterForm"]
+    AuthActions["Auth API calls"]
+    HomeRoute["/home server route"]
+    PostRoute["/status/:postId server route"]
+    PostReads["lib/server/posts.js"]
+    Feed["NewsFeed"]
+    FeedSections["PostFeedSection / FollowingFeedSection"]
+    PostCard["PostCard"]
+    PostDetail["PostDetail"]
+    ReplyList["ReplySection"]
+    Composer["Composer / ReplyComposer"]
+    PostMutations["Server Actions<br/>create, update, delete, reply"]
+    LikeRequest["Client API request<br/>like / unlike"]
+  end
+
+  subgraph Backend["Express backend"]
+    UserRoutes["/api/user routes"]
+    PostRoutes["/api/post routes"]
+    AuthValidation["Auth and input validation"]
+    Upload["Multer image upload"]
+    Controllers["Controllers"]
+    Repositories["Repositories"]
+    Models["Mongoose models"]
+    MongoDB[("MongoDB")]
+    UploadFiles[("backend/src/uploads/posts")]
+    StaticUploads["Static file serving<br/>/uploads"]
+  end
+
+  Browser --> Login
+  Login --> LoginForm
+  LoginForm --> AuthActions
+  AuthActions -->|"sign in / signup"| UserRoutes
+  UserRoutes --> AuthValidation
+  AuthValidation --> Controllers
+
+  Browser -->|"visit /home"| HomeRoute
+  HomeRoute -->|"AuthToken cookie"| PostReads
+  PostReads -->|"GET /api/post/"| PostRoutes
+  PostRoutes --> AuthValidation
+  AuthValidation --> Controllers
+  Controllers --> Repositories
+  Repositories --> Models
+  Models <--> MongoDB
+  HomeRoute -->|"initial posts"| Feed
+  Feed --> FeedSections
+  FeedSections --> PostCard
+
+  Browser -->|"visit /status/:postId"| PostRoute
+  PostRoute -->|"fetch post and replies"| PostReads
+  PostRoute -->|"post + replies"| PostDetail
+  PostDetail --> PostCard
+  PostDetail --> ReplyList
+  ReplyList --> PostCard
+
+  Composer -->|"create post"| PostMutations
+  ReplyList --> ReplyComposer
+  ReplyComposer -->|"create reply"| PostMutations
+  PostCard -->|"edit / delete"| PostMutations
+  PostCard -->|"like / unlike"| LikeRequest
+  PostMutations -->|"cookie-authenticated API calls"| PostRoutes
+  LikeRequest -->|"credentials included"| PostRoutes
+
+  PostRoutes -->|"POST / with image"| Upload
+  Upload --> UploadFiles
+  Upload --> Controllers
+  Controllers --> Repositories
+  UploadFiles --> StaticUploads
+  PostCard -.->|"render uploaded image"| StaticUploads
+
+  StaticUploads --> Browser

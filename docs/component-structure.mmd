@@ -1,0 +1,60 @@
+flowchart TD
+  RootLayout["RootLayout<br/>app/layout.js"]
+  LoginRoute["Login route<br/>app/page.js"]
+  HomeRoute["Feed route<br/>app/home/page.js"]
+  StatusRoute["Post route<br/>app/status/[postId]/page.js"]
+
+  RootLayout --> LoginRoute
+  RootLayout --> HomeRoute
+  RootLayout --> StatusRoute
+
+  subgraph Auth["Auth feature"]
+    LoginForm["LoginForm"]
+    RegisterForm["RegisterForm"]
+    LoginForm -->|"registration mode"| RegisterForm
+  end
+  LoginRoute --> LoginForm
+
+  subgraph Feed["Feed feature"]
+    NewsFeed["NewsFeed"]
+    Sidebar["Sidebar<br/>(profile feature)"]
+    Tabs["Tabs"]
+    ForYou["PostFeedSection"]
+    Following["FollowingFeedSection"]
+    Trending["TrendingList"]
+    Composer["Composer"]
+    NewsFeed --> Sidebar
+    NewsFeed --> Tabs
+    NewsFeed -->|"For You tab"| ForYou
+    NewsFeed -->|"Following tab"| Following
+    NewsFeed --> Trending
+    ForYou --> Composer
+  end
+  HomeRoute -->|"initial posts"| NewsFeed
+
+  subgraph Posts["Posts feature"]
+    PostCard["PostCard"]
+    PostActions["PostActionBar"]
+    PostMenu["PostMenu"]
+    PostEditor["PostEditor"]
+    PostCard --> PostActions
+    PostCard -->|"manageable post"| PostMenu
+    PostCard -->|"edit mode"| PostEditor
+  end
+  ForYou -->|"one per post"| PostCard
+  Following -->|"one per post"| PostCard
+  StatusRoute -->|"post data"| PostDetail["PostDetail"]
+  PostDetail --> PostCard
+
+  subgraph Replies["Replies feature"]
+    ReplySection["ReplySection"]
+    ReplyComposer["ReplyComposer"]
+    ReplySection -->|"one per reply"| PostCard
+    ReplySection --> ReplyComposer
+  end
+  PostDetail --> ReplySection
+
+  Composer -.->|"create callback updates feed state"| ForYou
+  PostEditor -.->|"save callback updates feed state"| ForYou
+  PostMenu -.->|"delete callback updates feed state"| ForYou
+  ReplyComposer -.->|"create callback updates reply state"| ReplySection
