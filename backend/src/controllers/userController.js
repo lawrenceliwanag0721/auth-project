@@ -3,14 +3,12 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
-const User = require('../models/User');
+const userRepository = require('../repositories/userRepository');
 
 const signInUser = async (req, res) => {
   const {username, password} = req.body;
 	try {
-		const user = await User.findOne({
-      username: username
-    });
+		const user = await userRepository.findByUsername(username);
 
 		if (!user) {
 			return res.status(401).json({
@@ -53,10 +51,7 @@ const signInUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-  const users = await 
-  User.find()
-  .select(['-password','-email'])
-  .sort({ createdAt: -1 });
+  const users = await userRepository.findAllPublic();
 
   res.json(users);
 };
@@ -68,9 +63,7 @@ const getUserById = async (req, res) => {
     });
   }
 
-  const user = await 
-  User.findById(req.params.id)
-  .select(['-password','-email']);
+  const user = await userRepository.findPublicById(req.params.id);
 
   if (!user) {
     return res.status(404).json({
@@ -84,13 +77,10 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   const { username, email, password} = req.body;
 
-  const existingUser = await 
-  User.findOne({
-      $or: [
-          { username: username },
-          { email: email }
-      ]
-  });
+  const existingUser = await userRepository.findByUsernameOrEmail(
+    username,
+    email
+  );
 
   if (existingUser) {
     return res.status(401).json({
@@ -101,14 +91,12 @@ const createUser = async (req, res) => {
   const hashedPassword = await
    bcrypt.hash(password, 10);
 
-  const user = await User.create({
+  await userRepository.create({
     username,
     email,
     password: hashedPassword,
   });
 
-  const response = user.toObject();
-  delete response.password;
   res.status(201).json({
     message: "Registration complete!"
   });
@@ -133,11 +121,7 @@ const updateUser = async (req, res) => {
     bcrypt.hash(updates.password, 10);
   }
 
-  const user = await
-   User.findByIdAndUpdate(req.params.id, updates, {
-    new: true,
-    runValidators: true,
-  }).select('-password');
+  const user = await userRepository.updateById(req.params.id, updates);
 
   if (!user) {
     return res.status(404).json({ 
@@ -154,7 +138,7 @@ const deleteUser = async (req, res) => {
     });
   }
 
-  const user = await User.findByIdAndDelete(req.params.id);
+  const user = await userRepository.deleteById(req.params.id);
   if (!user) {
     return res.status(404).json({
        message: 'User not found'
