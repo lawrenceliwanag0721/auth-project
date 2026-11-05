@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation';
-import PostDetail from '@/components/PostDetail';
+import PostDetail from '@/features/posts/components/PostDetail';
+import { ApiRequestError, getPostById, getPostReplies } from '@/lib/server/posts'
 
 export default async function page({params}) {
   const cookieStore = await cookies();
@@ -11,24 +12,19 @@ export default async function page({params}) {
     redirect('/');
   }
 
-  const response = await
-    fetch(`http://localhost:5000/api/post/${postId}`,{
-      method: "GET",
-      headers: {
-        Cookie: `AuthToken=${authToken}`
-      },
-      cache: 'no-store',
-    });
-  
-  if(!response.ok){
-    redirect('/');
+  let post
+  let replies
+  try {
+    post = await getPostById(authToken, postId)
+    replies = await getPostReplies(authToken, postId)
+  } catch (error) {
+    if (error instanceof ApiRequestError) redirect('/')
+    throw error
   }
-  
-  const data = await response.json();
   
   return (
     <div className="h-full flex flex-col items-center w-full px-8 pb-48">
-      <PostDetail post={data} postId={postId}/>
+      <PostDetail post={post} postId={postId} replies={replies}/>
     </div>
   );
 }

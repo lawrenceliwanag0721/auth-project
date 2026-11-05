@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import PostCard from './Postcard'
-import ReplyComposer from './ReplyComposer'
-import ReplySection from './ReplySection';
-import { getReplies } from '@/app/actions/getReplies';
+import ReplySection from '@/features/replies/components/ReplySection'
 
-export default async function PostDetail({ post, postId }) {
-  const replies = await getReplies(postId)
+export default function PostDetail({ post, postId, replies }) {
   return (
     <main className="w-full max-w-2xl flex flex-col gap-8">
       <nav className="sticky top-0 z-10">

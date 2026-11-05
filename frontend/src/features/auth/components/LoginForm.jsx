@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { PencilLine } from 'lucide-react';
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/app/actions/authActions'
-import RegisterForm from '@/components/RegisterForm'
+import RegisterForm from './RegisterForm'
 
 export default function LoginForm() {
   const router = useRouter();

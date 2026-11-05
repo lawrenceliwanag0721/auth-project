@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import PostCard from './Postcard'
+import PostCard from '@/features/posts/components/Postcard'
 import Composer from './Composer'
 
 export default function PostFeedSection({ posts }) {

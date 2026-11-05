@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 
-import Sidebar from './Sidebar'
+import Sidebar from '@/features/profile/components/Sidebar'
 import Tabs from './Tabs'
 import PostFeedSection from './PostFeedSection'
 import FollowingFeedSection from './FollowingFeedSection'
@@ -19,7 +19,7 @@ const USER = {
   ],
 }
 
-export default function NewsFeed({ initialProps }) {
+export default function NewsFeed({ initialPosts }) {
 
   const [active, setActive] = useState("For You")
 
@@ -35,7 +35,7 @@ export default function NewsFeed({ initialProps }) {
             active={active}
             setActive={setActive}
           />
-          {active === "For You" && <PostFeedSection posts={initialProps} />}
+          {active === "For You" && <PostFeedSection posts={initialPosts} />}
           {active === "Following" && <FollowingFeedSection/>}
         </div>
       </section>
